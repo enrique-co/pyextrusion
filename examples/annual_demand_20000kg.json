@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "annual_demand": {
+    "unit": "kg",
+    "value": 20000
+  }
+}

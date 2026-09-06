@@ -1,0 +1,57 @@
+{
+  "press": {
+    "name": "Example 2500T 8in",
+    "nominal_force_t": 2500,
+    "container_diameter_mm": 210,
+    "billet_diameter_mm": 203,
+    "billet_min_mm": 400,
+    "billet_max_mm": 1200,
+    "table_length_m": 54,
+    "dead_time_sec": 15,
+    "target_net_productivity_kg_h": 1600,
+    "recommended_min_linear_weight_kg_m": 1.0,
+    "saws": {
+      "billet_mm": 4,
+      "puller_mm": 4,
+      "final_mm": 4
+    },
+    "butt_rules": [
+      {
+        "profile_type": "solid",
+        "max_total_linear_weight_kg_m": 2.0,
+        "butt_mm": 20
+      },
+      {
+        "profile_type": "solid",
+        "min_total_linear_weight_kg_m": 2.0,
+        "max_total_linear_weight_kg_m": null,
+        "butt_mm": 25
+      },
+      {
+        "profile_type": "hollow",
+        "max_total_linear_weight_kg_m": 2.5,
+        "butt_mm": 25
+      },
+      {
+        "profile_type": "hollow",
+        "min_total_linear_weight_kg_m": 2.5,
+        "max_total_linear_weight_kg_m": null,
+        "butt_mm": 30
+      }
+    ]
+  },
+  "profile": {
+    "linear_weight_kg_m": 1.35,
+    "exits": 2,
+    "profile_type": "solid"
+  },
+  "production": {
+    "exit_speed_m_min": 24,
+    "cut_length_mm": 7000,
+    "bars_requested": 1000,
+    "front_scrap_m": 2,
+    "complexity": "normal",
+    "multi_billet_front_scrap_m": 1.0
+  },
+  "schema_version": "0.3"
+}

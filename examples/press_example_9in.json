@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "press": {
+    "name": "Example 9-inch press",
+    "nominal_size_in": 9,
+    "billet_diameter_mm": 228,
+    "container_diameter_mm": 236,
+    "billet_min_length_mm": 500,
+    "billet_max_length_mm": 1300,
+    "table_length_m": 64,
+    "dead_time_sec": 14,
+    "density_kg_m3": 2700,
+    "target_net_productivity_kg_h": 2200,
+    "press_force_t": 3500,
+    "saws": {
+      "billet_mm": 5,
+      "puller_mm": 5,
+      "final_mm": 5
+    }
+  }
+}

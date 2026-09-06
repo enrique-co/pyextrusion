@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.1",
+  "press": {
+    "name": "Example 8-inch press",
+    "nominal_size_in": 8,
+    "billet_diameter_mm": 203.2,
+    "container_diameter_mm": 210.31199999999998,
+    "billet_min_length_mm": 450.0,
+    "billet_max_length_mm": 1200.0,
+    "table_length_m": 54.0,
+    "dead_time_sec": 15.0,
+    "density_kg_m3": 2700.0,
+    "saws": {
+      "billet_mm": 5.0,
+      "puller_mm": 5.0,
+      "final_mm": 5.0
+    },
+    "target_net_productivity_kg_h": 1600.0,
+    "press_force_t": null,
+    "billet_kg_per_mm_override": null,
+    "_provenance": {
+      "nominal_size_in": "user_value",
+      "billet_diameter_mm": "inferred_from_nominal_size",
+      "container_diameter_mm": "inferred_from_billet_diameter",
+      "billet_limits": "inferred_from_nominal_size",
+      "target_net_productivity_kg_h": "inferred_from_nominal_size"
+    }
+  },
+  "start_at": "2026-09-07T05:00:00",
+  "orders": [
+    {
+      "order_id": "OF-001",
+      "case": {
+        "profile": {
+          "linear_weight_kg_m": 1.35,
+          "exits": 2,
+          "profile_type": "solid",
+          "section_per_exit_m2": null
+        },
+        "process": {
+          "exit_speed_m_min": 24.0,
+          "cut_length_mm": 7000.0,
+          "front_scrap_m": 2.0,
+          "complexity": "normal",
+          "cuts": null,
+          "butt_mm": null,
+          "multi_billet_front_scrap_m": null,
+          "ram_speed_mm_s": null
+        }
+      },
+      "request": {
+        "mode": "bars",
+        "value": 300
+      }
+    },
+    {
+      "order_id": "OF-002",
+      "case": {
+        "profile": {
+          "linear_weight_kg_m": 1.35,
+          "exits": 2,
+          "profile_type": "solid",
+          "section_per_exit_m2": null
+        },
+        "process": {
+          "exit_speed_m_min": 24.0,
+          "cut_length_mm": 7000.0,
+          "front_scrap_m": 2.0,
+          "complexity": "normal",
+          "cuts": null,
+          "butt_mm": null,
+          "multi_billet_front_scrap_m": null,
+          "ram_speed_mm_s": null
+        }
+      },
+      "request": {
+        "mode": "billets",
+        "value": 20
+      }
+    },
+    {
+      "order_id": "OF-003",
+      "case": {
+        "profile": {
+          "linear_weight_kg_m": 1.35,
+          "exits": 2,
+          "profile_type": "solid",
+          "section_per_exit_m2": null
+        },
+        "process": {
+          "exit_speed_m_min": 24.0,
+          "cut_length_mm": 7000.0,
+          "front_scrap_m": 2.0,
+          "complexity": "normal",
+          "cuts": null,
+          "butt_mm": null,
+          "multi_billet_front_scrap_m": null,
+          "ram_speed_mm_s": null
+        }
+      },
+      "request": {
+        "mode": "kg",
+        "value": 2500
+      }
+    }
+  ]
+}

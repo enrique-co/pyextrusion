@@ -1,0 +1,23 @@
+:root {
+  --md-primary-fg-color: #37474f;
+  --md-accent-fg-color: #00897b;
+}
+
+.md-typeset h1 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.md-typeset .hero-tagline {
+  font-size: 1.18rem;
+  max-width: 780px;
+  margin-bottom: 1.3rem;
+}
+
+.md-typeset .grid.cards > ul > li {
+  border-radius: .55rem;
+}
+
+.md-typeset code {
+  font-size: .86em;
+}

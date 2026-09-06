@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.1",
+  "profile": {
+    "linear_weight_kg_m": 1.35,
+    "exits": 2,
+    "profile_type": "solid"
+  },
+  "process": {
+    "exit_speed_m_min": 24,
+    "cut_length_mm": 7000,
+    "front_scrap_m": 2,
+    "complexity": "normal"
+  }
+}
