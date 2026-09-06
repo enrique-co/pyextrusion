@@ -1,0 +1,102 @@
+site_name: PyExtrusion
+site_url: https://pyextrusion.com/
+site_description: Engineering calculation toolkit for aluminium extrusion
+site_author: Enrique Calvo Ordonez
+repo_name: enrique-co/pyextrusion
+repo_url: https://github.com/enrique-co/pyextrusion
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+  palette:
+    - scheme: default
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - User Guide:
+      - Overview: user-guide/index.md
+      - Installation & first calculation: user-guide/getting-started.md
+      - Define a press: user-guide/press.md
+      - Define a profile & process: user-guide/profile-process.md
+      - Calculate a process: user-guide/calculate-process.md
+      - Plan one production order: user-guide/planning.md
+      - Production sequences: user-guide/production-sequences.md
+      - Compare presses: user-guide/compare-presses.md
+      - Understand results: user-guide/understand-results.md
+      - JSON & CLI: user-guide/json-cli.md
+      - Troubleshooting: user-guide/troubleshooting.md
+      - Model boundaries: user-guide/model-boundaries.md
+      - Glossary: user-guide/glossary.md
+  - Technical Reference:
+      - Overview: technical-reference/index.md
+      - Scope & units: technical-reference/scope-units.md
+      - Geometry & speeds: technical-reference/geometry.md
+      - Losses & productivity: technical-reference/losses-productivity.md
+      - Planning, sequences & comparisons: technical-reference/planning-sequences-comparisons.md
+      - Inputs & validation: technical-reference/inputs-validation.md
+      - Boundaries & interpretation: technical-reference/boundaries-interpretation.md
+      - Technical basis & references: technical-reference/references.md
+      - Formula summary: technical-reference/formula-summary.md
+  - API Reference:
+      - Overview: api-reference/index.md
+      - Python API: api-reference/python-api.md
+      - JSON: api-reference/json.md
+      - CLI: api-reference/cli.md
+      - Result fields: api-reference/result-fields.md
+      - Errors: api-reference/errors.md
+      - Integration: api-reference/integration.md
+  - Examples: examples/index.md
+  - About:
+      - Project: about/project.md
+      - Citation: about/citation.md
+      - Licence: about/license.md
+      - Changelog: about/changelog.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+copyright: "Copyright © 2026 Enrique Calvo Ordonez · PyExtrusion · Apache-2.0"
