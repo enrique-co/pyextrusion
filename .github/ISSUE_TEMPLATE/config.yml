@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Public documentation
+    url: https://pyextrusion.com
+    about: Check the user guide, technical reference and API documentation first.

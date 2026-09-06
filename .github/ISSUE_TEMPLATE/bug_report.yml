@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible problem in PyExtrusion
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Please remove any confidential plant, customer or production data before posting.
+  - type: input
+    id: version
+    attributes:
+      label: PyExtrusion version
+      description: For example, 0.16.0
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      description: For example, 3.12.5
+    validations:
+      required: true
+  - type: dropdown
+    id: interface
+    attributes:
+      label: Interface
+      options:
+        - Python API
+        - CLI
+        - JSON
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem
+      description: What happened, and what did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproducible example
+      description: Include the smallest code, command or JSON input that reproduces the issue. Remove confidential data.
+      render: shell
+  - type: textarea
+    id: info
+    attributes:
+      label: pyextrusion info
+      description: If relevant, paste the output of `pyextrusion info`.
+      render: text
