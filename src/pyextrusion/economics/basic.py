@@ -4,7 +4,7 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
-from .._strict import require_number
+from .._strict import require_int, require_number
 
 
 def _nonnegative(value: float, field: str) -> float:
@@ -42,6 +42,15 @@ class BasicCostSpec:
     ``maintenance_hour_cost`` and ``labor_hour_cost`` may be zero. By project
     convention, zero means that the caller considers that item already included
     in ``press_hour_cost`` or does not wish to split it out separately.
+
+    ``die_trial_count`` represents separate die-development trials / press
+    setups. ``die_trial_cost_each`` is a flat incremental cost assigned to each
+    such trial. It is caller-supplied and must not silently duplicate trial time
+    or material costs already included elsewhere in the scenario.
+
+    ``customer_tooling_charge`` is the one-time amount actually charged to the
+    customer for die/tooling development. It defaults to zero: PyExtrusion never
+    assumes that the customer pays the die, extra tooling or trial costs.
     """
 
     press_hour_cost: float
@@ -54,6 +63,9 @@ class BasicCostSpec:
     target_profit_margin_pct: float = 0.0
     die_cost: float = 0.0
     extra_tooling_cost: float = 0.0
+    die_trial_count: int = 0
+    die_trial_cost_each: float = 0.0
+    customer_tooling_charge: float = 0.0
     currency: str = "EUR"
 
     def __post_init__(self) -> None:
@@ -67,8 +79,13 @@ class BasicCostSpec:
             "good_product_sale_value_per_kg",
             "die_cost",
             "extra_tooling_cost",
+            "die_trial_cost_each",
+            "customer_tooling_charge",
         ):
             object.__setattr__(self, field_name, _nonnegative(getattr(self, field_name), field_name))
+
+        trial_count = require_int(self.die_trial_count, "die_trial_count", ValueError, minimum=0)
+        object.__setattr__(self, "die_trial_count", trial_count)
 
         margin = require_number(
             self.target_profit_margin_pct,
@@ -91,8 +108,15 @@ class BasicCostSpec:
         )
 
     @property
+    def die_trial_cost_total(self) -> float:
+        return _finite_result(self.die_trial_count * self.die_trial_cost_each, "die trial cost total")
+
+    @property
     def tooling_investment(self) -> float:
-        return _finite_result(self.die_cost + self.extra_tooling_cost, "tooling investment")
+        return _finite_result(
+            self.die_cost + self.extra_tooling_cost + self.die_trial_cost_total,
+            "tooling investment",
+        )
 
     @property
     def maintenance_included_in_press_cost(self) -> bool:
@@ -117,7 +141,11 @@ class BasicCostSpec:
             "target_profit_margin_pct": self.target_profit_margin_pct,
             "die_cost": self.die_cost,
             "extra_tooling_cost": self.extra_tooling_cost,
+            "die_trial_count": self.die_trial_count,
+            "die_trial_cost_each": self.die_trial_cost_each,
+            "die_trial_cost_total": self.die_trial_cost_total,
             "tooling_investment": self.tooling_investment,
+            "customer_tooling_charge": self.customer_tooling_charge,
             "currency": self.currency,
         }
 
@@ -127,13 +155,14 @@ class EconomicProductionBasis:
     """Mass and time basis for a basic economic calculation.
 
     ``good_kg_manufactured`` is the total OK mass physically manufactured.
-    ``revenue_good_kg`` is the subset to which the sale value is applied. This
-    allows overproduction to consume material and press time without silently
-    creating revenue. It must therefore be <= manufactured OK mass.
+    ``revenue_good_kg`` is the mass to which the sale value is applied. It may
+    represent the exact order quantity, all manufactured OK mass, or an
+    intermediate customer-accepted quantity. PyExtrusion deliberately does not
+    encode customer-specific overproduction tolerances.
 
-    ``scrap_kg`` is the total metal mass treated as scrap/recoverable loss for
-    the scenario. Raw material input is defined here as manufactured OK mass
-    plus scrap mass.
+    ``revenue_good_kg`` must be <= manufactured OK mass. ``scrap_kg`` is the
+    total metal mass treated as scrap/recoverable loss for the scenario. Raw
+    material input is defined here as manufactured OK mass plus scrap mass.
     """
 
     production_time_h: float
@@ -178,8 +207,11 @@ class BasicEconomicResult:
     """Derived basic production economics under explicit caller assumptions.
 
     Tooling is intentionally separated from recurrent production cost. The
-    first-run result includes die and extra-tooling investment once; no
-    amortization schedule is assumed.
+    first-run result includes die, extra tooling and die-development trial costs
+    once; no amortization schedule is assumed.
+
+    Product revenue and an optional customer tooling charge are kept separate.
+    The latter applies only to the first-run economics.
 
     Profit margin follows the sales-margin convention::
 
@@ -205,7 +237,8 @@ class BasicEconomicResult:
             ("scrap recovery value", self.scrap_recovery_value),
             ("recurring cost", self.recurring_cost),
             ("first-run cost", self.first_run_cost),
-            ("revenue", self.revenue),
+            ("product revenue", self.product_revenue),
+            ("first-run revenue", self.first_run_revenue),
         ):
             _finite_result(value, field_name)
 
@@ -261,16 +294,25 @@ class BasicEconomicResult:
         return self.first_run_cost / self.production.revenue_good_kg
 
     @property
-    def revenue(self) -> float:
+    def product_revenue(self) -> float:
         return self.production.revenue_good_kg * self.costs.good_product_sale_value_per_kg
 
     @property
+    def revenue(self) -> float:
+        """Compatibility alias for product revenue only."""
+        return self.product_revenue
+
+    @property
+    def first_run_revenue(self) -> float:
+        return self.product_revenue + self.costs.customer_tooling_charge
+
+    @property
     def recurring_profit(self) -> float:
-        return self.revenue - self.recurring_cost
+        return self.product_revenue - self.recurring_cost
 
     @property
     def first_run_profit(self) -> float:
-        return self.revenue - self.first_run_cost
+        return self.first_run_revenue - self.first_run_cost
 
     @staticmethod
     def _margin_pct(profit: float, revenue: float) -> float | None:
@@ -280,19 +322,23 @@ class BasicEconomicResult:
 
     @property
     def recurring_profit_margin_pct(self) -> float | None:
-        return self._margin_pct(self.recurring_profit, self.revenue)
+        return self._margin_pct(self.recurring_profit, self.product_revenue)
 
     @property
     def first_run_profit_margin_pct(self) -> float | None:
-        return self._margin_pct(self.first_run_profit, self.revenue)
+        return self._margin_pct(self.first_run_profit, self.first_run_revenue)
 
     @property
     def break_even_value_per_kg_recurring(self) -> float:
         return self.recurring_cost_per_revenue_kg
 
     @property
+    def first_run_cost_not_covered_by_tooling_charge(self) -> float:
+        return max(0.0, self.first_run_cost - self.costs.customer_tooling_charge)
+
+    @property
     def break_even_value_per_kg_first_run(self) -> float:
-        return self.first_run_cost_per_revenue_kg
+        return self.first_run_cost_not_covered_by_tooling_charge / self.production.revenue_good_kg
 
     def _target_value_per_kg(self, cost_per_kg: float) -> float:
         margin_fraction = self.costs.target_profit_margin_pct / 100.0
@@ -304,7 +350,13 @@ class BasicEconomicResult:
 
     @property
     def target_value_per_kg_first_run(self) -> float:
-        return self._target_value_per_kg(self.first_run_cost_per_revenue_kg)
+        margin_fraction = self.costs.target_profit_margin_pct / 100.0
+        target_total_revenue = self.first_run_cost / (1.0 - margin_fraction)
+        product_revenue_required = max(0.0, target_total_revenue - self.costs.customer_tooling_charge)
+        return _finite_result(
+            product_revenue_required / self.production.revenue_good_kg,
+            "target first-run sale value per kg",
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -317,18 +369,23 @@ class BasicEconomicResult:
                 "scrap_processing_cost": self.scrap_processing_cost,
                 "scrap_recovery_value": self.scrap_recovery_value,
                 "scrap_net_loss_cost": self.scrap_net_loss_cost,
+                "die_trial_cost_total": self.costs.die_trial_cost_total,
                 "tooling_investment": self.costs.tooling_investment,
+                "customer_tooling_charge": self.costs.customer_tooling_charge,
             },
             "results": {
                 "recurring_cost": self.recurring_cost,
                 "first_run_cost": self.first_run_cost,
                 "recurring_cost_per_revenue_kg": self.recurring_cost_per_revenue_kg,
                 "first_run_cost_per_revenue_kg": self.first_run_cost_per_revenue_kg,
+                "product_revenue": self.product_revenue,
                 "revenue": self.revenue,
+                "first_run_revenue": self.first_run_revenue,
                 "recurring_profit": self.recurring_profit,
                 "first_run_profit": self.first_run_profit,
                 "recurring_profit_margin_pct": self.recurring_profit_margin_pct,
                 "first_run_profit_margin_pct": self.first_run_profit_margin_pct,
+                "first_run_cost_not_covered_by_tooling_charge": self.first_run_cost_not_covered_by_tooling_charge,
                 "break_even_value_per_kg_recurring": self.break_even_value_per_kg_recurring,
                 "break_even_value_per_kg_first_run": self.break_even_value_per_kg_first_run,
                 "target_value_per_kg_recurring": self.target_value_per_kg_recurring,
