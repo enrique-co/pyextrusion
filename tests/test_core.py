@@ -387,19 +387,21 @@ def test_invalid_annual_demand_validation_is_strict_at_construction():
 
 
 def test_public_project_metadata():
+    import importlib.metadata
     import pyextrusion
-    assert pyextrusion.__version__ == "0.16.0"
+    assert pyextrusion.__version__ == importlib.metadata.version("pyextrusion")
     assert pyextrusion.__author__ == "Enrique Calvo Ordonez"
     assert pyextrusion.__license__ == "Apache-2.0"
     assert pyextrusion.__url__ == "https://pyextrusion.com"
 
 
 def test_cli_info_reports_identity(monkeypatch, capsys):
+    import pyextrusion
     from pyextrusion.cli import main
     monkeypatch.setattr("sys.argv", ["pyextrusion", "info"])
     main()
     out = capsys.readouterr().out
-    assert "PyExtrusion 0.16.0" in out
+    assert f"PyExtrusion {pyextrusion.__version__}" in out
     assert "Enrique Calvo Ordonez" in out
     assert "Apache-2.0" in out
     assert "https://pyextrusion.com" in out
@@ -497,7 +499,6 @@ def test_cli_field_fields_and_section(monkeypatch, capsys, tmp_path):
         StudyCase(ProfileSpec(1.35, 2, "solid"), ProductionSpec(24, 7000, 100, front_scrap_m=2)),
         case_path,
     )
-
     monkeypatch.setattr("sys.argv", [
         "pyextrusion", "calculate", str(case_path), "--press", str(press_path),
         "--field", "productivity.real_net_kg_h",
