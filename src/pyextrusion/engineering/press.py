@@ -1,11 +1,20 @@
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import Any, Literal
 
 from .._strict import require_number, require_string
 from .mechanics import circular_area_m2_from_diameter_mm
 from .metadata import SourceRef
+
+ForceLimitSource = Literal["caller_supplied", "operating_force_limit", "rated_force"]
+InstalledPowerKind = Literal[
+    "electrical_input",
+    "motor_shaft",
+    "hydraulic_output",
+    "aggregate_nameplate",
+]
 
 
 def _optional_positive(value: float | None, field: str) -> float | None:
@@ -27,8 +36,9 @@ def _validated_provenance(items: tuple[SourceRef, ...]) -> tuple[SourceRef, ...]
 class RamOperatingRange:
     """Configured ram-speed interval.
 
-    This object stores a machine limit only. It does not predict ram speed or
-    infer a suitable process speed from profile geometry or alloy data.
+    This object stores scalar machine limits only. It does not predict ram
+    speed, infer a suitable process speed, or assert that every speed in the
+    interval is sustainable at every configured force.
     """
 
     minimum_mm_s: float
@@ -54,25 +64,56 @@ class RamOperatingRange:
 
 @dataclass(frozen=True)
 class HydraulicSystemSpec:
-    """Optional documented hydraulic-system limits.
+    """Optional independently documented hydraulic-system quantities.
 
-    The fields are deliberately independent. PyExtrusion does not assume that
-    one pump, one cylinder or one pressure stage represents the whole press.
-    No force, flow or power capability is inferred automatically from this
-    configuration.
+    These fields are not an operating envelope. PyExtrusion does not assume
+    that pressure, flow, area and installed power belong to one actuator, one
+    pump or one simultaneous operating point.
+
+    ``pressure_force_area_m2`` is an area associated with one explicitly
+    interpreted ``p A`` force contribution; it is not automatically the net
+    ram effective area. ``installed_power_kind`` is required whenever installed
+    power is supplied so the energy boundary is not left implicit.
     """
 
-    effective_area_m2: float | None = None
+    pressure_force_area_m2: float | None = None
     max_pressure_bar: float | None = None
     max_flow_l_min: float | None = None
     installed_power_kw: float | None = None
+    installed_power_kind: InstalledPowerKind | None = None
     provenance: tuple[SourceRef, ...] = ()
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "effective_area_m2", _optional_positive(self.effective_area_m2, "hydraulic effective_area_m2"))
-        object.__setattr__(self, "max_pressure_bar", _optional_positive(self.max_pressure_bar, "hydraulic max_pressure_bar"))
-        object.__setattr__(self, "max_flow_l_min", _optional_positive(self.max_flow_l_min, "hydraulic max_flow_l_min"))
-        object.__setattr__(self, "installed_power_kw", _optional_positive(self.installed_power_kw, "hydraulic installed_power_kw"))
+        object.__setattr__(
+            self,
+            "pressure_force_area_m2",
+            _optional_positive(self.pressure_force_area_m2, "hydraulic pressure_force_area_m2"),
+        )
+        object.__setattr__(
+            self,
+            "max_pressure_bar",
+            _optional_positive(self.max_pressure_bar, "hydraulic max_pressure_bar"),
+        )
+        object.__setattr__(
+            self,
+            "max_flow_l_min",
+            _optional_positive(self.max_flow_l_min, "hydraulic max_flow_l_min"),
+        )
+        installed_power = _optional_positive(self.installed_power_kw, "hydraulic installed_power_kw")
+        object.__setattr__(self, "installed_power_kw", installed_power)
+
+        valid_power_kinds = {
+            "electrical_input",
+            "motor_shaft",
+            "hydraulic_output",
+            "aggregate_nameplate",
+        }
+        if installed_power is not None:
+            if self.installed_power_kind not in valid_power_kinds:
+                raise ValueError("installed_power_kind is required when installed_power_kw is provided")
+        elif self.installed_power_kind is not None:
+            raise ValueError("installed_power_kind requires installed_power_kw")
+
         object.__setattr__(self, "provenance", _validated_provenance(self.provenance))
 
     def to_dict(self) -> dict[str, Any]:
@@ -84,8 +125,9 @@ class PressEngineeringSpec:
     """Press-specific engineering data supplied as explicit configuration.
 
     The model intentionally separates universal equations from machine data.
-    It stores only documented or user-supplied limits and does not invent a
-    predictive extrusion-force, pressure, friction or thermal model.
+    It stores documented or user-supplied scalar limits and does not invent a
+    predictive extrusion-force, pressure, friction, hydraulic-envelope or
+    thermal model.
     """
 
     press_id: str
@@ -98,6 +140,8 @@ class PressEngineeringSpec:
 
     def __post_init__(self) -> None:
         press_id = require_string(self.press_id, "press_id", ValueError).strip()
+        if not press_id:
+            raise ValueError("press_id must be a non-empty string")
         container_diameter = require_number(
             self.container_diameter_mm,
             "container_diameter_mm",
@@ -128,13 +172,19 @@ class PressEngineeringSpec:
 
     @property
     def configured_force_limit_mn(self) -> float | None:
-        """Return the explicit operating limit, falling back to rated force.
-
-        No derating factor or safety factor is introduced by PyExtrusion.
-        """
+        """Return the configured comparison limit with no hidden derating."""
         if self.operating_force_limit_mn is not None:
             return self.operating_force_limit_mn
         return self.rated_force_mn
+
+    @property
+    def configured_force_limit_source(self) -> ForceLimitSource | None:
+        """Identify which configured scalar supplied the force limit."""
+        if self.operating_force_limit_mn is not None:
+            return "operating_force_limit"
+        if self.rated_force_mn is not None:
+            return "rated_force"
+        return None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -142,39 +192,74 @@ class PressEngineeringSpec:
 
 @dataclass(frozen=True)
 class ForceCapacityCheck:
-    """Direct comparison between an externally supplied force and a limit."""
+    """Arithmetic comparison of required force with a configured scalar limit.
+
+    This object does not prove that the limit is physically available at a
+    particular speed, stroke position, duration or hydraulic operating mode.
+    Derived fields are properties so contradictory combinations cannot be
+    supplied directly by callers.
+    """
 
     required_force_mn: float
-    available_force_mn: float
-    margin_mn: float
-    utilization: float
-    within_limit: bool
+    configured_force_limit_mn: float
+    limit_source: ForceLimitSource = "caller_supplied"
+
+    def __post_init__(self) -> None:
+        required = require_number(self.required_force_mn, "required_force_mn", ValueError, minimum=0.0)
+        limit = require_number(
+            self.configured_force_limit_mn,
+            "configured_force_limit_mn",
+            ValueError,
+            minimum=0.0,
+            exclusive_minimum=True,
+        )
+        assert required is not None and limit is not None
+        if self.limit_source not in {"caller_supplied", "operating_force_limit", "rated_force"}:
+            raise ValueError(f"unsupported force limit source: {self.limit_source!r}")
+        utilization = required / limit
+        if not math.isfinite(utilization):
+            raise ValueError("force utilization is outside the representable finite range")
+        object.__setattr__(self, "required_force_mn", required)
+        object.__setattr__(self, "configured_force_limit_mn", limit)
+
+    @property
+    def margin_mn(self) -> float:
+        return self.configured_force_limit_mn - self.required_force_mn
+
+    @property
+    def utilization(self) -> float:
+        return self.required_force_mn / self.configured_force_limit_mn
+
+    @property
+    def within_limit(self) -> bool:
+        return self.required_force_mn <= self.configured_force_limit_mn
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "required_force_mn": self.required_force_mn,
+            "configured_force_limit_mn": self.configured_force_limit_mn,
+            "limit_source": self.limit_source,
+            "margin_mn": self.margin_mn,
+            "utilization": self.utilization,
+            "within_limit": self.within_limit,
+        }
 
 
-def check_force_capacity(required_force_mn: float, available_force_mn: float) -> ForceCapacityCheck:
-    """Compare a supplied required force against a supplied available force.
+def check_force_capacity(
+    required_force_mn: float,
+    configured_force_limit_mn: float,
+    *,
+    limit_source: ForceLimitSource = "caller_supplied",
+) -> ForceCapacityCheck:
+    """Compare a supplied force with a supplied configured scalar limit.
 
-    This is an accounting identity, not a predictive extrusion-force model.
-    The caller remains responsible for how ``required_force_mn`` was obtained.
+    This is an accounting comparison, not a predictive extrusion-force or
+    hydraulic-capability model. A positive margin is not a safety factor.
     """
-    required = require_number(required_force_mn, "required_force_mn", ValueError, minimum=0.0)
-    available = require_number(
-        available_force_mn,
-        "available_force_mn",
-        ValueError,
-        minimum=0.0,
-        exclusive_minimum=True,
-    )
-    assert required is not None and available is not None
     return ForceCapacityCheck(
-        required_force_mn=required,
-        available_force_mn=available,
-        margin_mn=available - required,
-        utilization=required / available,
-        within_limit=required <= available,
+        required_force_mn=required_force_mn,
+        configured_force_limit_mn=configured_force_limit_mn,
+        limit_source=limit_source,
     )
 
 
@@ -183,6 +268,7 @@ def check_press_force_capacity(required_force_mn: float, press: PressEngineering
     if not isinstance(press, PressEngineeringSpec):
         raise ValueError("press must be a PressEngineeringSpec")
     force_limit = press.configured_force_limit_mn
-    if force_limit is None:
+    force_source = press.configured_force_limit_source
+    if force_limit is None or force_source is None:
         raise ValueError("press has no configured force limit")
-    return check_force_capacity(required_force_mn, force_limit)
+    return check_force_capacity(required_force_mn, force_limit, limit_source=force_source)
