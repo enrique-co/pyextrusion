@@ -22,9 +22,28 @@ EstimateKind = Literal[
 Confidence = Literal["high", "medium", "low"]
 
 
+def _validated_text_items(items: object, field: str) -> tuple[str, ...]:
+    if isinstance(items, (str, bytes)):
+        raise ValueError(f"{field} must be a collection of non-empty strings, not a single string")
+    try:
+        values = tuple(items)  # type: ignore[arg-type]
+    except TypeError as exc:
+        raise ValueError(f"{field} must be a collection of non-empty strings") from exc
+    for item in values:
+        if not isinstance(item, str) or not item.strip():
+            raise ValueError(f"{field} entries must be non-empty strings")
+    # Preserve valid caller text literally; validation must not silently rewrite
+    # assumptions or warnings that carry physical meaning.
+    return values
+
+
 @dataclass(frozen=True)
 class Interval:
-    """Closed numeric interval used for explicit engineering uncertainty."""
+    """Closed absolute bounds for the same quantity and unit as a result value.
+
+    This object is deliberately non-statistical. It does not imply a confidence
+    level, probability distribution, standard uncertainty or coverage factor.
+    """
 
     lower: float
     upper: float
@@ -38,13 +57,18 @@ class Interval:
         object.__setattr__(self, "lower", lower)
         object.__setattr__(self, "upper", upper)
 
+    def contains(self, value: float) -> bool:
+        number = require_number(value, "engineering interval value", ValueError)
+        assert number is not None
+        return self.lower <= number <= self.upper
+
     def to_dict(self) -> dict[str, float]:
         return asdict(self)
 
 
 @dataclass(frozen=True)
 class SourceRef:
-    """Traceable origin for an engineering input or model parameter."""
+    """Traceable origin declared for an engineering input or model parameter."""
 
     source_kind: SourceKind
     reference: str
@@ -74,11 +98,16 @@ class SourceRef:
 
 @dataclass(frozen=True)
 class EngineeringResult:
-    """A scalar engineering result with explicit meaning and traceability.
+    """A scalar result with caller-declared traceability and limitations.
 
     Low-level deterministic equations may return plain floats. This wrapper is
-    intended for user-facing composed results where provenance, confidence,
-    assumptions or uncertainty must remain attached to the numeric value.
+    for user-facing composed results where provenance, assumptions, warnings or
+    bounds must remain attached to the value.
+
+    ``confidence`` is a qualitative label supplied by the caller; PyExtrusion
+    does not infer or certify it. ``uncertainty`` contains absolute lower and
+    upper bounds in the same unit as ``value``. ``uncertainty=None`` means that
+    no bounds were supplied, never that uncertainty is zero.
     """
 
     value: float | None
@@ -89,23 +118,42 @@ class EngineeringResult:
     assumptions: tuple[str, ...] = ()
     warnings: tuple[str, ...] = ()
     provenance: tuple[SourceRef, ...] = ()
+    unavailable_reason: str | None = None
 
     def __post_init__(self) -> None:
+        value: float | None = None
         if self.value is not None:
-            value = require_number(self.value, "engineering result value", ValueError)
-            assert value is not None
-            object.__setattr__(self, "value", value)
+            validated = require_number(self.value, "engineering result value", ValueError)
+            assert validated is not None
+            value = validated
+            object.__setattr__(self, "value", validated)
+
         if not isinstance(self.unit, str) or not self.unit.strip():
             raise ValueError("engineering result unit must be a non-empty string")
         object.__setattr__(self, "unit", self.unit.strip())
+
         if self.estimate_kind not in {"direct", "derived", "indicator", "calibrated_prediction"}:
             raise ValueError(f"unsupported engineering estimate kind: {self.estimate_kind!r}")
         if self.confidence not in {"high", "medium", "low"}:
             raise ValueError(f"unsupported engineering confidence: {self.confidence!r}")
+
         if self.uncertainty is not None and not isinstance(self.uncertainty, Interval):
             raise ValueError("engineering result uncertainty must be an Interval when provided")
-        object.__setattr__(self, "assumptions", tuple(str(item) for item in self.assumptions))
-        object.__setattr__(self, "warnings", tuple(str(item) for item in self.warnings))
+        if value is None and self.uncertainty is not None:
+            raise ValueError("an unavailable engineering result cannot carry numeric uncertainty bounds")
+        if value is not None and self.uncertainty is not None and not self.uncertainty.contains(value):
+            raise ValueError("engineering result value must lie within its absolute uncertainty bounds")
+
+        if value is None:
+            if not isinstance(self.unavailable_reason, str) or not self.unavailable_reason.strip():
+                raise ValueError("an unavailable engineering result requires a non-empty unavailable_reason")
+            object.__setattr__(self, "unavailable_reason", self.unavailable_reason.strip())
+        elif self.unavailable_reason is not None:
+            raise ValueError("unavailable_reason is only valid when engineering result value is None")
+
+        object.__setattr__(self, "assumptions", _validated_text_items(self.assumptions, "engineering assumptions"))
+        object.__setattr__(self, "warnings", _validated_text_items(self.warnings, "engineering warnings"))
+
         provenance = tuple(self.provenance)
         if any(not isinstance(item, SourceRef) for item in provenance):
             raise ValueError("engineering result provenance entries must be SourceRef instances")
