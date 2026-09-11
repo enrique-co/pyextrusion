@@ -12,9 +12,15 @@ from pyextrusion.engineering import (
     check_force_capacity,
     check_press_force_capacity,
     circular_area_m2_from_diameter_mm,
+    compare_specific_energy_kwh_per_tonne,
+    energy_kwh_from_constant_power_kw,
     force_mn_from_specific_pressure_mpa,
     hydraulic_force_mn_from_pressure_bar,
+    hydraulic_power_kw_from_pressure_bar_flow_l_min,
     hydraulic_pressure_bar_from_force_mn,
+    ram_power_kw_from_force_mn_speed_mm_s,
+    ram_work_kwh_from_constant_force_mn_stroke_mm,
+    specific_energy_kwh_per_tonne,
     specific_pressure_mpa_from_force_mn,
     true_strain_from_extrusion_ratio,
 )
@@ -215,3 +221,58 @@ def test_press_capacity_check_requires_a_configured_force_limit():
 def test_press_engineering_configuration_rejects_ambiguous_or_invalid_inputs(factory):
     with pytest.raises(ValueError):
         factory()
+
+
+def test_ideal_hydraulic_power_uses_pq_identity_with_explicit_units():
+    assert hydraulic_power_kw_from_pressure_bar_flow_l_min(300.0, 1200.0) == pytest.approx(600.0)
+    assert hydraulic_power_kw_from_pressure_bar_flow_l_min(0.0, 1200.0) == pytest.approx(0.0)
+
+
+def test_ram_power_uses_force_times_speed_identity():
+    assert ram_power_kw_from_force_mn_speed_mm_s(33.0, 10.0) == pytest.approx(330.0)
+    assert ram_power_kw_from_force_mn_speed_mm_s(33.0, 0.0) == pytest.approx(0.0)
+
+
+def test_constant_power_energy_and_constant_force_work_are_consistent():
+    force_mn = 10.0
+    speed_mm_s = 5.0
+    duration_s = 20.0
+    stroke_mm = speed_mm_s * duration_s
+
+    power_kw = ram_power_kw_from_force_mn_speed_mm_s(force_mn, speed_mm_s)
+    energy_from_power = energy_kwh_from_constant_power_kw(power_kw, duration_s)
+    energy_from_work = ram_work_kwh_from_constant_force_mn_stroke_mm(force_mn, stroke_mm)
+
+    assert power_kw == pytest.approx(50.0)
+    assert energy_from_power == pytest.approx(50.0 * 20.0 / 3600.0)
+    assert energy_from_work == pytest.approx(energy_from_power)
+
+
+def test_specific_energy_normalizes_only_the_supplied_energy_and_mass():
+    assert specific_energy_kwh_per_tonne(10.0, 500.0) == pytest.approx(20.0)
+
+
+def test_specific_energy_comparison_has_no_hidden_ranking_or_efficiency_model():
+    result = compare_specific_energy_kwh_per_tonne(20.0, 18.0)
+    assert result.reference_kwh_per_t == pytest.approx(20.0)
+    assert result.candidate_kwh_per_t == pytest.approx(18.0)
+    assert result.delta_kwh_per_t == pytest.approx(-2.0)
+    assert result.candidate_to_reference_ratio == pytest.approx(0.9)
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda: hydraulic_power_kw_from_pressure_bar_flow_l_min(-1.0, 1200.0),
+        lambda: hydraulic_power_kw_from_pressure_bar_flow_l_min(300.0, "1200"),
+        lambda: ram_power_kw_from_force_mn_speed_mm_s(True, 10.0),
+        lambda: ram_power_kw_from_force_mn_speed_mm_s(10.0, float("nan")),
+        lambda: energy_kwh_from_constant_power_kw(10.0, -1.0),
+        lambda: ram_work_kwh_from_constant_force_mn_stroke_mm(10.0, -1.0),
+        lambda: specific_energy_kwh_per_tonne(10.0, 0.0),
+        lambda: compare_specific_energy_kwh_per_tonne(0.0, 10.0),
+    ],
+)
+def test_power_and_energy_identities_reject_invalid_or_ambiguous_inputs(call):
+    with pytest.raises(ValueError):
+        call()
