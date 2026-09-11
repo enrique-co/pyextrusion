@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import math
 
+from .._strict import require_number
+
 
 def _positive_finite(value: float, name: str) -> float:
-    number = float(value)
-    if not math.isfinite(number) or number <= 0.0:
-        raise ValueError(f"{name} must be a finite value greater than zero")
+    number = require_number(value, name, ValueError, minimum=0.0, exclusive_minimum=True)
+    assert number is not None
     return number
 
 
@@ -22,9 +23,8 @@ def true_strain_from_extrusion_ratio(extrusion_ratio: float) -> float:
     R=1 is valid and returns zero strain. Values below one are rejected because
     they do not represent a reduction ratio for direct extrusion.
     """
-    ratio = float(extrusion_ratio)
-    if not math.isfinite(ratio) or ratio < 1.0:
-        raise ValueError("extrusion_ratio must be finite and >= 1")
+    ratio = require_number(extrusion_ratio, "extrusion_ratio", ValueError, minimum=1.0)
+    assert ratio is not None
     return math.log(ratio)
 
 
