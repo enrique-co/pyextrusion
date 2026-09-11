@@ -42,6 +42,7 @@ nav:
       - Plan one production order: user-guide/planning.md
       - Production sequences: user-guide/production-sequences.md
       - Compare presses: user-guide/compare-presses.md
+      - Basic economics: user-guide/basic-economics.md
       - Understand results: user-guide/understand-results.md
       - JSON & CLI: user-guide/json-cli.md
       - Troubleshooting: user-guide/troubleshooting.md
