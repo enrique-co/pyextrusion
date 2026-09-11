@@ -41,12 +41,15 @@ def test_true_strain_uses_natural_logarithm():
     [
         lambda: circular_area_m2_from_diameter_mm(0.0),
         lambda: circular_area_m2_from_diameter_mm(float("inf")),
+        lambda: circular_area_m2_from_diameter_mm("200"),
         lambda: specific_pressure_mpa_from_force_mn(-1.0, 0.02),
+        lambda: specific_pressure_mpa_from_force_mn(True, 0.02),
         lambda: force_mn_from_specific_pressure_mpa(500.0, 0.0),
         lambda: hydraulic_force_mn_from_pressure_bar(0.0, 0.5),
         lambda: hydraulic_pressure_bar_from_force_mn(10.0, float("nan")),
         lambda: true_strain_from_extrusion_ratio(0.99),
         lambda: true_strain_from_extrusion_ratio(float("nan")),
+        lambda: true_strain_from_extrusion_ratio("40"),
     ],
 )
 def test_engineering_primitives_reject_invalid_inputs(call):
@@ -80,3 +83,35 @@ def test_engineering_metadata_keeps_uncertainty_and_provenance():
 def test_invalid_interval_is_rejected():
     with pytest.raises(ValueError):
         Interval(2.0, 1.0)
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        lambda: Interval("1", 2.0),
+        lambda: Interval(False, 2.0),
+        lambda: EngineeringResult(
+            value="12.5",
+            unit="MN",
+            estimate_kind="derived",
+            confidence="high",
+        ),
+        lambda: EngineeringResult(
+            value=12.5,
+            unit="MN",
+            estimate_kind="derived",
+            confidence="high",
+            uncertainty={"lower": 12.0, "upper": 13.0},
+        ),
+        lambda: EngineeringResult(
+            value=12.5,
+            unit="MN",
+            estimate_kind="derived",
+            confidence="high",
+            provenance=({"source_kind": "fabricated", "reference": ""},),
+        ),
+    ],
+)
+def test_engineering_metadata_rejects_untyped_or_malformed_values(factory):
+    with pytest.raises(ValueError):
+        factory()
