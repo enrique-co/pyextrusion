@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import math
 from dataclasses import asdict, dataclass
 from typing import Any, Literal
+
+from .._strict import require_number
 
 SourceKind = Literal[
     "user_input",
@@ -29,10 +30,9 @@ class Interval:
     upper: float
 
     def __post_init__(self) -> None:
-        lower = float(self.lower)
-        upper = float(self.upper)
-        if not math.isfinite(lower) or not math.isfinite(upper):
-            raise ValueError("engineering interval bounds must be finite")
+        lower = require_number(self.lower, "engineering interval lower", ValueError)
+        upper = require_number(self.upper, "engineering interval upper", ValueError)
+        assert lower is not None and upper is not None
         if lower > upper:
             raise ValueError("engineering interval lower bound must be <= upper bound")
         object.__setattr__(self, "lower", lower)
@@ -92,9 +92,8 @@ class EngineeringResult:
 
     def __post_init__(self) -> None:
         if self.value is not None:
-            value = float(self.value)
-            if not math.isfinite(value):
-                raise ValueError("engineering result value must be finite when available")
+            value = require_number(self.value, "engineering result value", ValueError)
+            assert value is not None
             object.__setattr__(self, "value", value)
         if not isinstance(self.unit, str) or not self.unit.strip():
             raise ValueError("engineering result unit must be a non-empty string")
@@ -103,9 +102,14 @@ class EngineeringResult:
             raise ValueError(f"unsupported engineering estimate kind: {self.estimate_kind!r}")
         if self.confidence not in {"high", "medium", "low"}:
             raise ValueError(f"unsupported engineering confidence: {self.confidence!r}")
+        if self.uncertainty is not None and not isinstance(self.uncertainty, Interval):
+            raise ValueError("engineering result uncertainty must be an Interval when provided")
         object.__setattr__(self, "assumptions", tuple(str(item) for item in self.assumptions))
         object.__setattr__(self, "warnings", tuple(str(item) for item in self.warnings))
-        object.__setattr__(self, "provenance", tuple(self.provenance))
+        provenance = tuple(self.provenance)
+        if any(not isinstance(item, SourceRef) for item in provenance):
+            raise ValueError("engineering result provenance entries must be SourceRef instances")
+        object.__setattr__(self, "provenance", provenance)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
