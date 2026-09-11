@@ -14,14 +14,28 @@ from .mechanics import (
     specific_pressure_mpa_from_force_mn,
     true_strain_from_extrusion_ratio,
 )
+from .press import (
+    ForceCapacityCheck,
+    HydraulicSystemSpec,
+    PressEngineeringSpec,
+    RamOperatingRange,
+    check_force_capacity,
+    check_press_force_capacity,
+)
 
 __all__ = [
     "Confidence",
     "EngineeringResult",
     "EstimateKind",
+    "ForceCapacityCheck",
+    "HydraulicSystemSpec",
     "Interval",
+    "PressEngineeringSpec",
+    "RamOperatingRange",
     "SourceKind",
     "SourceRef",
+    "check_force_capacity",
+    "check_press_force_capacity",
     "circular_area_m2_from_diameter_mm",
     "force_mn_from_specific_pressure_mpa",
     "hydraulic_force_mn_from_pressure_bar",
