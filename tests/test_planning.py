@@ -40,7 +40,19 @@ def test_planning_300_bars_small_daily_batch():
     assert result.planned_bars == 300
     assert result.planned_good_m == pytest.approx(2100.0)
     assert result.planned_good_kg == pytest.approx(2835.0)
-    assert result.time_used_min == pytest.approx(53.5)
+
+    # Finished-bar length is net length. Physical extrusion time also includes
+    # puller and final-saw kerfs. With 2 exits, 300 bars are 150 longitudinal
+    # cuts of 7 m; 30 billets add 60 m front scrap, 30 puller kerfs and
+    # 30*(5+1) final-saw events. Dead time is 29*15 s.
+    physical_extruded_m = (
+        (300 / 2) * 7.0
+        + 30 * 2.0
+        + 30 * (press.saws.puller_mm / 1000.0)
+        + 30 * (5 + 1) * (press.saws.final_mm / 1000.0)
+    )
+    expected_time = physical_extruded_m / 24.0 + 29 * press.dead_time_sec / 60.0
+    assert result.time_used_min == pytest.approx(expected_time)
 
 
 def test_planning_exact_20_billets():
