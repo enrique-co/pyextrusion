@@ -146,19 +146,23 @@ def test_one_billet_two_profiles_has_first_priority_when_valid():
 
 
 def test_double_profile_is_invalid_when_single_pull_exceeds_table():
-    # Regression for v0.11.2: sequential double-profile production still
-    # requires each individual pull to fit on the runout table.
+    # Sequential double-profile production still requires each individual
+    # physical pull, including downstream saw kerfs, to fit the runout table.
+    p = press()
     r = calculate_simple(
-        press(), linear_weight_kg_m=0.30, exits=1, profile_type="solid",
+        p, linear_weight_kg_m=0.30, exits=1, profile_type="solid",
         exit_speed_m_min=20, cut_length_mm=7000, bars_requested=100,
         front_scrap_m=2, cuts=8,
     )
-    # 8 x 7 m + 2 m = 58 m, greater than the 54 m table. The manual cut
-    # request is respected, but no configuration may bypass the table limit.
     cfg = next(c for c in r.configurations if c.name == "1_billet_2_profiles")
-    assert cfg.table_occupancy_length_m == pytest.approx(58.0)
+    expected_physical_pull = (
+        8 * 7.0 + 2.0
+        + p.saws.puller_mm / 1000.0
+        + (8 + 1) * p.saws.final_mm / 1000.0
+    )
+    assert cfg.table_occupancy_length_m == pytest.approx(expected_physical_pull)
     assert not cfg.valid
-    assert "profile pull exceeds table length" in cfg.reasons
+    assert "physical profile pull including saw kerfs exceeds table length" in cfg.reasons
     assert not r.viable
     assert r.recommended_configuration is None
 
@@ -183,18 +187,28 @@ def test_v21_billet_first_selection_can_prefer_double_profile_over_more_billets_
 
 
 def test_multi_billet_front_scrap_recalculates_billet_geometry():
+    p = press()
     r = calculate_simple(
-        press(), linear_weight_kg_m=4.0, exits=1, profile_type="solid",
+        p, linear_weight_kg_m=4.0, exits=1, profile_type="solid",
         exit_speed_m_min=15, cut_length_mm=7000, bars_requested=100,
         front_scrap_m=2, multi_billet_front_scrap_m=1,
     )
     cfg = next(c for c in r.configurations if c.name == "k_billets_1_profile")
-    expected_pull = r.cuts * 7 + 1
-    expected_useful = 4.0 * expected_pull / 0.087
-    assert cfg.length_per_billet_m == pytest.approx(expected_pull)
+    nominal_segment = r.cuts * 7.0 + 1.0
+    final_kerf_m = p.saws.final_mm / 1000.0
+    shared_kerf_m = (p.saws.puller_mm + p.saws.final_mm) / 1000.0
+    expected_physical_per_billet = (
+        nominal_segment
+        + r.cuts * final_kerf_m
+        + shared_kerf_m / cfg.billets_per_pull
+    )
+    expected_useful = 4.0 * expected_physical_per_billet / 0.087
+    assert cfg.length_per_billet_m == pytest.approx(expected_physical_per_billet)
     assert cfg.billet_useful_length_mm == pytest.approx(expected_useful)
     assert cfg.billet_length_mm == pytest.approx(expected_useful + r.butt_mm)
-    assert cfg.total_configuration_length_m == pytest.approx(cfg.billets_per_pull * expected_pull)
+    assert cfg.total_configuration_length_m == pytest.approx(
+        cfg.billets_per_pull * expected_physical_per_billet
+    )
     assert cfg.billets_per_pull >= 2
 
 
@@ -700,8 +714,9 @@ def test_v090_butt_rules_accept_public_profile_aliases():
 
 
 def test_v090_double_profile_losses_use_two_pulls_but_one_butt_and_billet_saw():
+    p = press()
     r = calculate_simple(
-        press(), linear_weight_kg_m=0.4, exits=1, profile_type="plate",
+        p, linear_weight_kg_m=0.4, exits=1, profile_type="plate",
         exit_speed_m_min=20, cut_length_mm=7000, bars_requested=100,
         front_scrap_m=2, butt_mm=20,
     )
@@ -710,11 +725,18 @@ def test_v090_double_profile_losses_use_two_pulls_but_one_butt_and_billet_saw():
     # 8 billets × 2 pulls × 2 m × 0.4 kg/m
     assert r.scrap.front_scrap_kg == pytest.approx(12.8)
     # Butt and billet saw happen once per billet.
-    assert r.scrap.butt_kg == pytest.approx(r.billets * 20 * press().billet_weight_kg_per_mm)
-    assert r.scrap.billet_saw_kg == pytest.approx(r.billets * press().saws.billet_mm * press().billet_weight_kg_per_mm)
+    assert r.scrap.butt_kg == pytest.approx(r.billets * 20 * p.billet_weight_kg_per_mm)
+    assert r.scrap.billet_saw_kg == pytest.approx(r.billets * p.saws.billet_mm * p.billet_weight_kg_per_mm)
     # Puller saw happens once per pull/profile.
-    assert r.scrap.puller_saw_kg == pytest.approx((press().saws.puller_mm / 1000) * 0.4 * r.billets * 2)
-    assert r.timing.extrusion_per_billet_min == pytest.approx((2 * (r.cuts * 7 + 2)) / 20)
+    assert r.scrap.puller_saw_kg == pytest.approx((p.saws.puller_mm / 1000) * 0.4 * r.billets * 2)
+    physical_per_profile = (
+        r.cuts * 7.0 + 2.0
+        + p.saws.puller_mm / 1000.0
+        + (r.cuts + 1) * p.saws.final_mm / 1000.0
+    )
+    assert r.timing.extrusion_per_billet_min == pytest.approx(
+        2 * physical_per_profile / 20
+    )
 
 
 def test_v090_50000kg_case_uses_corrected_double_profile_billet_count():
