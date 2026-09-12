@@ -36,11 +36,12 @@ def press8(*, table=54, billet_min=450, billet_max=1200, saws=None):
 
 
 def test_v21_dynamic_multi_billet_can_exceed_three_billets_per_pull():
-    # One 8 m bar + 2 m front scrap creates a valid 10 m segment and the
-    # optimized billet is fixed before k is computed. Five full segments fit
-    # the 54 m table; the engine must not stop at the historical 2/3 limit.
+    # One 8 m bar + 2 m front scrap creates a valid nominal 10 m segment.
+    # Physical table occupancy also reserves puller/final saw kerfs. Five
+    # complete billet contributions still fit the 54 m table.
+    p = press8()
     r = calculate_simple(
-        press8(),
+        p,
         linear_weight_kg_m=8.0,
         exits=1,
         profile_type="solid",
@@ -55,13 +56,18 @@ def test_v21_dynamic_multi_billet_can_exceed_three_billets_per_pull():
     assert r.billets_per_pull == 5
     assert r.cuts_per_pull == 5
     assert r.bars_per_pull == 5
-    assert r.table_occupancy_length_m == pytest.approx(50.0)
+    expected_occupancy = (
+        5 * (8.0 + 2.0)
+        + (p.saws.puller_mm / 1000.0)
+        + (5 + 1) * (p.saws.final_mm / 1000.0)
+    )
+    assert r.table_occupancy_length_m == pytest.approx(expected_occupancy)
 
 
 def test_v21_billet_first_does_not_shorten_billet_to_fit_more_billets():
     # With this profile, one-profile optimization selects 2 cuts and a billet
     # near the press maximum. Reducing to 1 cut would allow more billets on
-    # the table, but v2.1 explicitly forbids that optimization direction.
+    # the table, but billet-first explicitly forbids that optimization direction.
     r = calculate_simple(
         press8(),
         linear_weight_kg_m=4.8,
@@ -79,8 +85,8 @@ def test_v21_billet_first_does_not_shorten_billet_to_fit_more_billets():
     assert one.billet_length_mm <= 1200
     assert one.billets_per_pull == 2
 
-    # A deliberately shorter 1-cut candidate would fit four segments on the
-    # same table, but must not replace the 2-cut billet-first candidate.
+    # A deliberately shorter 1-cut candidate would fit four nominal segments
+    # on the same table, but must not replace the 2-cut billet-first candidate.
     cut_m = 9.8
     short_segment = cut_m + 2.0
     assert math.floor(54 / short_segment) == 4
@@ -109,9 +115,16 @@ def test_v21_multi_billet_front_scrap_reoptimizes_billet_before_k():
     cfg = next(c for c in base.configurations if c.name == "k_billets_1_profile")
     assert cfg.valid and cfg.billets_per_pull >= 2
     assert cfg.front_scrap_per_billet_m == pytest.approx(1.0)
-    expected_segment = cfg.cuts * 7.0 + 1.0
-    expected_useful = 4.0 * expected_segment / 0.087
-    assert cfg.length_per_billet_m == pytest.approx(expected_segment)
+    nominal_segment = cfg.cuts * 7.0 + 1.0
+    final_kerf_m = p.saws.final_mm / 1000.0
+    shared_kerf_m = (p.saws.puller_mm + p.saws.final_mm) / 1000.0
+    expected_physical_per_billet = (
+        nominal_segment
+        + cfg.cuts * final_kerf_m
+        + shared_kerf_m / cfg.billets_per_pull
+    )
+    expected_useful = 4.0 * expected_physical_per_billet / 0.087
+    assert cfg.length_per_billet_m == pytest.approx(expected_physical_per_billet)
     assert cfg.billet_useful_length_mm == pytest.approx(expected_useful)
     assert cfg.billet_length_mm == pytest.approx(expected_useful + base.butt_mm)
     assert base.process.applied_front_scrap_source == "multi_billet_user_override"
@@ -164,6 +177,7 @@ def test_v21_multi_billet_puller_and_final_saw_are_per_pull_with_partial_last_pu
     expected_final_events = 1 * (1 * 5 + 1) + (1 * 2 + 1)
     expected_final = (p.saws.final_mm / 1000) * kg_m_total * expected_final_events
     assert r.scrap.final_saw_kg == pytest.approx(expected_final)
+    assert any("partial multi-billet pull" in w.lower() for w in r.warnings)
 
 
 def test_v21_three_or_more_profiles_per_billet_is_controlled_unsupported_scenario():

@@ -30,6 +30,7 @@ CONFIG_PRIORITY = {
     "1_billet_2_profiles": 2,
 }
 
+
 @dataclass(frozen=True)
 class _ResolvedProcess:
     press: object
@@ -94,7 +95,7 @@ def extrusion_ratio(
 
     ``billet_area_m2`` is accepted only as a legacy keyword alias so old code
     keeps running. New code and all internal calculations use
-    ``container_area_m2`` as required by the PyExtrusion v2.4 model.
+    ``container_area_m2`` as required by the PyExtrusion model.
     """
     if container_area_m2 is None:
         container_area_m2 = billet_area_m2
@@ -133,7 +134,7 @@ def ram_speed(
 
 
 def extrusion_ratio_status(profile_type: str, ratio: float) -> str:
-    """Classify RE using the documented PyExtrusion v2.4 thresholds."""
+    """Classify RE using the documented PyExtrusion thresholds."""
     canonical = normalize_profile_type(profile_type)
     if canonical == "solid":
         if ratio < 25.0:
@@ -376,26 +377,46 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         butt_mm, butt_source = p.resolve_butt_mm(prof.profile_type, kg_m_total)
 
     fixed_by_user = data.cuts is not None
+    puller_kerf_m = p.saws.puller_mm / 1000.0
+    final_kerf_m = p.saws.final_mm / 1000.0
 
     def _one_profile_cfg(front_scrap_m: float, source: str, *, require_multi: bool = False) -> ConfigurationResult:
         def build(n: int) -> ConfigurationResult:
-            segment_m = n * cut_m + front_scrap_m if n >= 1 else 0.0
-            useful_mm, billet_mm = (
-                _billet_lengths(kg_m_total, segment_m, p.billet_weight_kg_per_mm, butt_mm)
-                if n >= 1 else (0.0, 0.0)
+            base_segment_m = n * cut_m + front_scrap_m if n >= 1 else 0.0
+            per_billet_nonshared_m = (
+                base_segment_m + n * final_kerf_m if n >= 1 else 0.0
             )
-            k = math.floor(p.table_length_m / segment_m) if segment_m > 0 else 0
+            shared_pull_kerf_m = puller_kerf_m + final_kerf_m
+            available_for_billets_m = p.table_length_m - shared_pull_kerf_m
+            k = (
+                math.floor(available_for_billets_m / per_billet_nonshared_m)
+                if per_billet_nonshared_m > 0 and available_for_billets_m >= 0
+                else 0
+            )
+            full_pull_m = (
+                k * per_billet_nonshared_m + shared_pull_kerf_m if k >= 1 else 0.0
+            )
+            physical_per_billet_m = full_pull_m / k if k >= 1 else 0.0
+            useful_mm, billet_mm = (
+                _billet_lengths(
+                    kg_m_total,
+                    physical_per_billet_m,
+                    p.billet_weight_kg_per_mm,
+                    butt_mm,
+                )
+                if n >= 1 and k >= 1 else (0.0, 0.0)
+            )
             reasons: list[str] = []
             if n < 1:
                 reasons.append("cuts < 1")
-            if segment_m > p.table_length_m:
-                reasons.append("profile segment exceeds table length")
+            if k < 1:
+                reasons.append("no complete physical pull fits the table")
+            if full_pull_m > p.table_length_m + 1e-12:
+                reasons.append("physical pull including saw kerfs exceeds table length")
             if billet_mm < p.billet_min_length_mm:
                 reasons.append("billet below minimum")
             if billet_mm > p.billet_max_length_mm:
                 reasons.append("billet above maximum")
-            if k < 1:
-                reasons.append("no complete billet segment fits the table")
             if require_multi and k < 2:
                 reasons.append("multi-billet front scrap requires billets_per_pull >= 2")
             name = "k_billets_1_profile" if k >= 2 else "1_billet_1_profile"
@@ -409,10 +430,10 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
                 cuts=n,
                 front_scrap_per_billet_m=front_scrap_m,
                 front_scrap_source=source,
-                length_per_profile_m=segment_m,
-                length_per_billet_m=segment_m,
-                total_configuration_length_m=max(k, 0) * segment_m,
-                table_occupancy_length_m=max(k, 0) * segment_m,
+                length_per_profile_m=base_segment_m,
+                length_per_billet_m=physical_per_billet_m,
+                total_configuration_length_m=full_pull_m,
+                table_occupancy_length_m=full_pull_m,
                 billet_useful_length_mm=useful_mm,
                 billet_length_mm=billet_mm,
                 billets_per_pull=max(k, 1),
@@ -425,23 +446,19 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         if fixed_by_user:
             return build(int(data.cuts))
 
-        max_segment_by_billet = max(0.0, (p.billet_max_length_mm - butt_mm) * p.billet_weight_kg_per_mm / kg_m_total)
-        min_segment_by_billet = max(0.0, (p.billet_min_length_mm - butt_mm) * p.billet_weight_kg_per_mm / kg_m_total)
-        max_segment = min(p.table_length_m, max_segment_by_billet)
-        if require_multi:
-            max_segment = min(max_segment, p.table_length_m / 2.0)
-        n_max = math.floor((max_segment - front_scrap_m) / cut_m + 1e-12)
-        n_min = max(1, math.ceil((min_segment_by_billet - front_scrap_m) / cut_m - 1e-12))
-        n_max = min(n_max, theoretical_cuts)
-        if n_min <= n_max and n_max >= 1:
-            candidate = build(n_max)
-            if candidate.valid:
-                return candidate
-
-        if theoretical_cuts < 1:
+        candidates = [build(n) for n in range(1, theoretical_cuts + 1)]
+        valid_candidates = [candidate for candidate in candidates if candidate.valid]
+        if valid_candidates:
+            return max(valid_candidates, key=lambda candidate: candidate.billet_length_mm)
+        if not candidates:
             return build(0)
-        diagnostic_n = min(theoretical_cuts, max(1, n_max)) if n_max >= 1 else 1
-        return build(diagnostic_n)
+        return max(
+            candidates,
+            key=lambda candidate: (
+                candidate.billet_length_mm <= p.billet_max_length_mm,
+                candidate.billet_length_mm,
+            ),
+        )
 
     cfg_one_standard = _one_profile_cfg(data.front_scrap_m, "standard")
     one_candidates: list[ConfigurationResult] = []
@@ -475,17 +492,28 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
 
     def _double_profile_cfg() -> ConfigurationResult:
         def build(n: int) -> ConfigurationResult:
-            per_profile_m = n * cut_m + data.front_scrap_m if n >= 1 else 0.0
-            total_extruded_m = 2.0 * per_profile_m
+            base_per_profile_m = n * cut_m + data.front_scrap_m if n >= 1 else 0.0
+            physical_per_profile_m = (
+                base_per_profile_m
+                + puller_kerf_m
+                + (n + 1) * final_kerf_m
+                if n >= 1 else 0.0
+            )
+            total_extruded_m = 2.0 * physical_per_profile_m
             useful_mm, billet_mm = (
-                _billet_lengths(kg_m_total, total_extruded_m, p.billet_weight_kg_per_mm, butt_mm)
+                _billet_lengths(
+                    kg_m_total,
+                    total_extruded_m,
+                    p.billet_weight_kg_per_mm,
+                    butt_mm,
+                )
                 if n >= 1 else (0.0, 0.0)
             )
             reasons: list[str] = []
             if n < 1:
                 reasons.append("cuts < 1")
-            if per_profile_m > p.table_length_m:
-                reasons.append("profile pull exceeds table length")
+            if physical_per_profile_m > p.table_length_m:
+                reasons.append("physical profile pull including saw kerfs exceeds table length")
             if billet_mm < p.billet_min_length_mm:
                 reasons.append("double-profile billet below minimum")
             if billet_mm > p.billet_max_length_mm:
@@ -499,10 +527,10 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
                 cuts=n,
                 front_scrap_per_billet_m=data.front_scrap_m,
                 front_scrap_source="standard",
-                length_per_profile_m=per_profile_m,
+                length_per_profile_m=physical_per_profile_m,
                 length_per_billet_m=total_extruded_m,
                 total_configuration_length_m=total_extruded_m,
-                table_occupancy_length_m=per_profile_m,
+                table_occupancy_length_m=physical_per_profile_m,
                 billet_useful_length_mm=useful_mm,
                 billet_length_mm=billet_mm,
                 billets_per_pull=1,
@@ -514,20 +542,19 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
 
         if fixed_by_user:
             return build(int(data.cuts))
-        max_total_extruded_by_billet = max(0.0, (p.billet_max_length_mm - butt_mm) * p.billet_weight_kg_per_mm / kg_m_total)
-        min_total_extruded_by_billet = max(0.0, (p.billet_min_length_mm - butt_mm) * p.billet_weight_kg_per_mm / kg_m_total)
-        max_per_profile = min(p.table_length_m, max_total_extruded_by_billet / 2.0)
-        min_per_profile = min_total_extruded_by_billet / 2.0
-        n_max = min(theoretical_cuts, math.floor((max_per_profile - data.front_scrap_m) / cut_m + 1e-12))
-        n_min = max(1, math.ceil((min_per_profile - data.front_scrap_m) / cut_m - 1e-12))
-        if n_min <= n_max and n_max >= 1:
-            candidate = build(n_max)
-            if candidate.valid:
-                return candidate
-        if theoretical_cuts < 1:
+        candidates = [build(n) for n in range(1, theoretical_cuts + 1)]
+        valid_candidates = [candidate for candidate in candidates if candidate.valid]
+        if valid_candidates:
+            return max(valid_candidates, key=lambda candidate: candidate.billet_length_mm)
+        if not candidates:
             return build(0)
-        diagnostic_n = min(theoretical_cuts, max(1, n_max)) if n_max >= 1 else 1
-        return build(diagnostic_n)
+        return max(
+            candidates,
+            key=lambda candidate: (
+                candidate.billet_length_mm <= p.billet_max_length_mm,
+                candidate.billet_length_mm,
+            ),
+        )
 
     cfg_double = _double_profile_cfg()
     configurations = (cfg_one, cfg_double)
@@ -543,14 +570,30 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         for n in n_values:
             if n < 1:
                 continue
-            per_profile_m = n * cut_m + data.front_scrap_m
-            if per_profile_m > p.table_length_m:
+            physical_per_profile_m = (
+                n * cut_m
+                + data.front_scrap_m
+                + puller_kerf_m
+                + (n + 1) * final_kerf_m
+            )
+            if physical_per_profile_m > p.table_length_m:
                 continue
-            useful_per_profile_mm = (kg_m_total * per_profile_m) / p.billet_weight_kg_per_mm
+            useful_per_profile_mm = (
+                kg_m_total * physical_per_profile_m
+            ) / p.billet_weight_kg_per_mm
             if useful_per_profile_mm <= 0:
                 continue
-            min_profiles = max(3, math.ceil(max(0.0, p.billet_min_length_mm - butt_mm) / useful_per_profile_mm))
-            max_profiles = math.floor(max(0.0, p.billet_max_length_mm - butt_mm) / useful_per_profile_mm)
+            min_profiles = max(
+                3,
+                math.ceil(
+                    max(0.0, p.billet_min_length_mm - butt_mm)
+                    / useful_per_profile_mm
+                ),
+            )
+            max_profiles = math.floor(
+                max(0.0, p.billet_max_length_mm - butt_mm)
+                / useful_per_profile_mm
+            )
             if min_profiles <= max_profiles:
                 if best is None or min_profiles < best:
                     best = min_profiles
@@ -577,16 +620,15 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         else:
             warnings.append("Recommended special configuration: 1_billet_2_profiles.")
 
-    if fixed_by_user and data.cuts is not None:
-        manual_n = int(data.cuts)
-        manual_profile_m = manual_n * cut_m + data.front_scrap_m
-        _, manual_billet = _billet_lengths(
-            kg_m_total, manual_profile_m, p.billet_weight_kg_per_mm, butt_mm
-        )
-        if manual_profile_m > p.table_length_m:
-            warnings.insert(0, "User-defined cuts exceed table length.")
-        if manual_billet > p.billet_max_length_mm:
+    if fixed_by_user:
+        if any("table length" in reason or "fits the table" in reason for reason in cfg_one.reasons):
+            warnings.insert(0, "User-defined cuts exceed the physical table allowance after saw kerfs.")
+        if any("above maximum" in reason for reason in cfg_one.reasons) and any(
+            "above maximum" in reason for reason in cfg_double.reasons
+        ):
             warnings.insert(0, "User-defined cuts require a billet longer than the press maximum.")
+        if not viable and not any("User-defined" in warning for warning in warnings):
+            warnings.insert(0, "User-defined cuts do not produce a viable supported configuration.")
 
     selected_cuts = selected.cuts if selected else max((c.cuts for c in configurations), default=0)
     profiles_per_billet = selected.profiles_per_billet if selected else 0
@@ -719,12 +761,12 @@ def calculate_process(data: ProcessInput) -> ProcessResult:
 
 
 def calculate(data: StudyInput) -> CalculationResult:
-    """Calculate the PyExtrusion v2.4 direct-extrusion productivity model.
+    """Calculate the PyExtrusion direct-extrusion productivity model.
 
-    v2.4 uses billet-first optimisation: the longest feasible billet is selected
-    before the number of billets that can form one continuous pull is derived.
-    Multi-billet pulls are dynamic; one billet may produce at most two sequential
-    profiles in the supported model.
+    The v2.8 calculation preserves billet-first configuration selection while
+    reserving physical puller/final-saw kerf length in billet geometry and
+    technical extrusion time. Startup and complexity remain modeled planning
+    allowances rather than physical material added to the billet.
     """
     _validate(data)
     r = _resolve_process(data)
@@ -786,7 +828,6 @@ def calculate(data: StudyInput) -> CalculationResult:
     good_effective = bars_target_effective * cut_m * prof.linear_weight_kg_m
     good_made = bars_manufactured * cut_m * prof.linear_weight_kg_m
 
-
     kg_start = (5.0 if prof.exits == 1 else 5.0 + 5.0 * prof.exits) * kg_m_total
     kg_complexity = COMPLEXITY_PCT[data.complexity] * good_made
     kg_butt = billets * butt_mm * p.billet_weight_kg_per_mm
@@ -811,8 +852,36 @@ def calculate(data: StudyInput) -> CalculationResult:
 
     nominal_gross = kg_m_total * exit_speed_m_min * 60.0
     selected_length_m = selected.length_per_billet_m if selected else 0.0
-    t_ext_one = r.extrusion_time_per_billet_min
-    t_ext_total = billets * t_ext_one
+
+    puller_kerf_m = p.saws.puller_mm / 1000.0
+    final_kerf_m = p.saws.final_mm / 1000.0
+    base_extruded_length_m = (
+        billets
+        * profiles_per_billet
+        * (selected_cuts * cut_m + selected_front_scrap)
+        if selected else 0.0
+    )
+    exact_extruded_length_m = (
+        base_extruded_length_m
+        + n_pulls * puller_kerf_m
+        + final_cuts_total * final_kerf_m
+    )
+    t_ext_total = exact_extruded_length_m / exit_speed_m_min if viable else 0.0
+    t_ext_one = t_ext_total / billets if billets else r.extrusion_time_per_billet_min
+
+    if (
+        selected
+        and selected.profiles_per_billet == 1
+        and selected.billets_per_pull > 1
+        and remaining_billets > 0
+        and (puller_kerf_m > 0 or final_kerf_m > 0)
+    ):
+        warnings.append(
+            "Final partial multi-billet pull uses exact order-level saw-kerf accounting; "
+            "the process-level billet recommendation represents a complete pull, so the "
+            "last partial pull may require plant-specific billet-length adjustment."
+        )
+
     dead_events = max(billets - 1, 0)
     if selected and selected.profiles_per_billet == 2:
         dead_events += billets
@@ -821,8 +890,8 @@ def calculate(data: StudyInput) -> CalculationResult:
     hours = t_total / 60.0
     cycle = t_total / billets if billets else 0.0
 
-    extruded_losses = kg_start + kg_complexity + kg_front + swarf_puller + swarf_final
-    kg_extruded_total = good_made + extruded_losses
+    physical_extruded_losses = kg_front + swarf_puller + swarf_final
+    kg_extruded_total = good_made + physical_extruded_losses
     real_gross = kg_extruded_total / hours if hours else 0.0
     real_net = good_made / hours if hours else 0.0
 
@@ -953,7 +1022,7 @@ def calculate(data: StudyInput) -> CalculationResult:
         fixed_pct=fixed_pct,
         total_kg=global_scrap,
         total_pct=global_pct,
-        extruded_losses_kg=extruded_losses,
+        extruded_losses_kg=physical_extruded_losses,
     )
     productivity_block = ProductivityResult(
         nominal_gross_kg_h=nominal_gross,
@@ -1072,4 +1141,3 @@ def calculate(data: StudyInput) -> CalculationResult:
     )
     _assert_finite_result(result)
     return result
-

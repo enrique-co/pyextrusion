@@ -11,10 +11,13 @@ The public output can distinguish between:
 
 The recommended whole-millimetre value is intended as an engineering convenience. Users should still apply plant-specific billet-cutting tolerances and operating practice.
 
+Finished cut length is interpreted as the **net finished-bar length**. Physical downstream saw kerfs therefore require additional extruded metal beyond the finished bars. Puller and final-saw kerf allowances are included in the physical process length used for billet geometry, table occupancy and technical extrusion time.
+
+For multi-billet continuous pulls, pull-level kerfs are shared by the billets forming the pull. The process-level billet recommendation represents the selected complete-pull geometry. If an order finishes with a partial multi-billet pull, exact order-level saw events are used for timing and losses; the final partial pull can require plant-specific billet-length handling.
+
 The exact internal decision logic used to select among valid candidates is implementation detail and is not part of the public Technical Reference.
 
 ---
-
 
 ## Process-loss model
 
@@ -50,11 +53,11 @@ Scrap_{fixed,\%}
 \times 100
 \]
 
-### Additional modeled losses
+### Additional modeled allowances
 
-PyExtrusion can also represent additional modeled losses such as:
+PyExtrusion can also represent additional planning allowances such as:
 
-- startup loss;
+- startup allowance;
 - process-complexity allowance.
 
 The total modeled scrap is therefore:
@@ -77,16 +80,23 @@ Scrap_{total,\%}
 \times 100
 \]
 
-These loss categories are calculation aids. They should not be interpreted as a universal scrap standard for every extrusion plant.
+Startup and complexity are **modeled planning allowances**, not additional physical length inserted into the billet and not additional extrusion time. They should therefore not be interpreted as an exact physical mass balance or as measured plant scrap unless a user has deliberately calibrated the corresponding assumptions to plant data.
+
+These categories are calculation aids. They are not a universal scrap standard for every extrusion plant.
 
 ---
-
 
 ## Saw kerf convention
 
 A saw kerf represents the physical thickness of material lost by a cutting operation.
 
-PyExtrusion distinguishes billet, puller and final saw kerfs because they occur at different stages of the process.
+PyExtrusion distinguishes billet, puller and final saw kerfs because they occur at different process boundaries:
+
+- **billet saw kerf** is an upstream billet-stock loss and does not add extrusion length;
+- **puller saw kerf** is downstream extruded metal and is reserved in the physical extruded length;
+- **final saw kerf** is downstream extruded metal and is reserved in the physical extruded length for the represented cut events.
+
+Accordingly, puller and final-saw kerfs contribute to billet material requirement, table occupancy where applicable, and technical extrusion time.
 
 A configured kerf of:
 
@@ -100,7 +110,6 @@ It does not automatically remove unrelated cycle time or other process effects.
 
 ---
 
-
 ## Good output
 
 For a finished bar:
@@ -111,7 +120,7 @@ M_{bar} = L_{cut} \times w
 
 where:
 
-- \(L_{cut}\) = finished bar length, m;
+- \(L_{cut}\) = **net finished bar length**, m;
 - \(w\) = linear weight of one finished profile, kg/m.
 
 For a production quantity of \(N\) finished bars:
@@ -120,10 +129,11 @@ For a production quantity of \(N\) finished bars:
 M_{good} = N \times L_{cut} \times w
 \]
 
+Saw kerf is additional material loss and does not reduce the declared finished-bar length.
+
 The number of exits affects how many bars are produced simultaneously, but the mass of one finished bar is still based on the linear weight of one profile.
 
 ---
-
 
 ## Nominal gross productivity
 
@@ -153,7 +163,6 @@ This is an idealised extrusion-rate quantity and does not by itself represent fi
 
 ---
 
-
 ## Technical extrusion time
 
 The fundamental extrusion-time relationship is:
@@ -161,8 +170,10 @@ The fundamental extrusion-time relationship is:
 \[
 T_{extrusion}
 =
-\frac{L_{extruded}}{V_e}
+\frac{L_{extruded,physical}}{V_e}
 \]
+
+where the physical extruded length includes finished product, represented front scrap, and downstream puller/final-saw kerf allowances.
 
 When expressed in metres and metres per minute, the result is in minutes.
 
@@ -178,10 +189,9 @@ T_{dead}
 
 This is **technical press time**, not complete plant elapsed time.
 
-It excludes unmodeled waits such as die availability, die correction, caustic cleaning, shift changes, maintenance or material logistics.
+It excludes unmodeled waits such as die availability, die correction, caustic cleaning, shift changes, maintenance or material logistics. Startup and complexity allowances also do not add time unless a future or external model explicitly represents such time.
 
 ---
-
 
 ## Real gross and net productivity
 
@@ -189,16 +199,18 @@ PyExtrusion distinguishes between gross and net production performance.
 
 ### Real gross productivity
 
-Real gross productivity relates the represented extruded material to the calculated technical time.
+Real gross productivity relates the physically represented extruded material to the calculated technical time.
 
 Conceptually:
 
 \[
 Q_{gross,real}
 =
-\frac{M_{extruded,total}}
+\frac{M_{extruded,physical}}
 {T_{technical,h}}
 \]
+
+The physically represented extruded mass includes good product, front scrap and downstream saw kerfs. Modeled startup and complexity allowances remain outside this physical extrusion boundary.
 
 ### Net productivity
 
@@ -211,10 +223,9 @@ Q_{net,real}
 {T_{technical,h}}
 \]
 
-Net kg/h is one of the most useful results when comparing the practical production performance of the same profile on different presses.
+Net kg/h is one of the most useful results when comparing the practical production performance of the same profile on different presses, provided the same time boundary and process assumptions are used.
 
 ---
-
 
 ## Productivity and geometric indices
 
