@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Corrects the physical process boundary for downstream saw kerfs.
+- Treats `cut_length_mm` as net finished-bar length; puller and final-saw kerfs now reserve additional extruded material instead of being added only after billet sizing.
+- Propagates puller/final-saw kerf allowance into billet geometry, runout-table occupancy and technical extrusion time.
+- Keeps billet-saw kerf as an upstream billet-stock loss rather than extrusion length.
+- Uses exact order-level puller/final-saw event counts for technical time, including partial final multi-billet pulls.
+- Adds a controlled warning when a partial multi-billet pull can require plant-specific billet-length handling beyond the complete-pull process recommendation.
+- Reframes startup and complexity as modeled planning allowances: they remain in total modeled scrap but no longer inflate the physical `extruded_losses_kg` / real-gross extrusion boundary or extrusion time.
+- Adds physical mass/time balance regression coverage for one-pull, double-profile and multi-billet cases.
+- This correction can slightly increase calculated billet length and technical time for processes with non-zero downstream saw kerfs.
+
 ## 0.16.0
 
 - Aligns the multi-press comparison layer with the current PyExtrusion calculation engine.
@@ -69,7 +81,7 @@
 - Prevents the optimiser from shortening a billet merely to fit more billets on the runout table.
 - Allows 4, 5 or more billets per continuous pull when geometry permits.
 - Keeps `1_billet_2_profiles` and explicitly limits the supported model to a maximum of two sequential profiles per billet.
-- Adds controlled `supported=False` diagnostics when a scenario would require 3+ profiles per billet.
+- Adds controlled `supported=False` diagnostics when a scenario would require 3+ profiles/billet.
 - Counts multi-billet puller and final-saw losses per pull, including partial final pulls.
 - Corrects multi-billet `cuts_ratio` to use cuts represented by the complete table-occupying pull.
 - Adds `ProcessSpec` / `Process` and `PlanningCase` so process conditions can be defined independently from order quantity.
