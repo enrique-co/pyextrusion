@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Adds a source-traced advanced engineering layer for direct aluminium extrusion without changing existing planning/productivity calculations.
+- Adds AA6063 Sheppard hot-working constants, Zener-Hollomon and Sheppard-Wright steady-state flow stress.
+- Adds modified Feltham mean extrusion strain rate and equivalent-axisymmetric geometry helpers.
+- Adds Sheppard axisymmetric steady pressure, billet/container friction, breakthrough increment, required axial force and press-force-capacity checks.
+- Adds the source-exact three-component Stuwe analytical temperature-rise approximation reproduced by Sheppard.
+- Adds deformation, billet/container surface-layer and die-land surface temperature-rise components plus heating-depth outputs.
+- Adds an explicitly labelled analytical surface exit-temperature estimate; this is not the full Sheppard-Wood Integral Profile transient model.
+- Keeps porthole/bridge-die load corrections, full stroke-wise thermal evolution and metallurgical quality prediction outside the current validated model boundary.
 - Corrects the physical process boundary for downstream saw kerfs.
 - Treats `cut_length_mm` as net finished-bar length; puller and final-saw kerfs now reserve additional extruded material instead of being added only after billet sizing.
 - Propagates puller/final-saw kerf allowance into billet geometry, runout-table occupancy and technical extrusion time.
