@@ -3,6 +3,7 @@ import math
 import pytest
 
 from pyextrusion.engineering import (
+    AA6060_VERLINDEN_1993,
     AA6063_SHEPPARD_1999,
     HotWorkingConstitutiveModel,
     SourceRef,
@@ -28,6 +29,27 @@ def test_sheppard_aa6063_constants_match_table_4_1():
     assert model.A_s_1 == pytest.approx(math.exp(22.5))
     assert model.provenance[0].source_kind == "literature"
     assert "Table 4.1" in model.provenance[0].reference
+
+
+def test_verlinden_aa6060_constants_match_reported_hot_torsion_set():
+    model = AA6060_VERLINDEN_1993
+
+    assert model.alloy == "AA6060"
+    assert model.alpha_mpa_inv == pytest.approx(0.035)
+    assert model.n == pytest.approx(4.67)
+    assert model.activation_energy_j_mol == pytest.approx(161_000.0)
+    assert model.gas_constant_j_mol_k == pytest.approx(8.314)
+    assert model.A_s_1 == pytest.approx(7.6301e10)
+    assert model.ln_A == pytest.approx(math.log(7.6301e10))
+    assert len(model.provenance) == 2
+    assert "Verlinden" in model.provenance[0].reference
+    assert "Sariyarlioglu" in model.provenance[1].reference
+
+
+def test_aa6060_model_keeps_material_state_limitation_explicit():
+    assert any("does not infer" in note or "does not" in note for note in AA6060_VERLINDEN_1993.notes)
+    assert AA6060_VERLINDEN_1993.temperature_range_c is None
+    assert AA6060_VERLINDEN_1993.mean_strain_rate_range_s_1 is None
 
 
 def test_constitutive_model_does_not_imply_an_aa6060_alias():
@@ -81,6 +103,16 @@ def test_zener_hollomon_and_flow_stress_regression_for_aa6063():
     assert z_value == pytest.approx(3.36816832726e10)
     assert stress == pytest.approx(28.1793602855)
     assert steady_state_flow_stress_mpa(z_value, AA6063_SHEPPARD_1999) == pytest.approx(stress)
+
+
+def test_zener_hollomon_and_flow_stress_regression_for_aa6060():
+    strain_rate = modified_feltham_mean_strain_rate_s_1(11.75, 236.0, 31.2)
+
+    ln_z = log_zener_hollomon_parameter(strain_rate, 470.0, AA6060_VERLINDEN_1993)
+    stress = flow_stress_mpa(strain_rate, 470.0, AA6060_VERLINDEN_1993)
+
+    assert ln_z == pytest.approx(27.3882082585)
+    assert stress == pytest.approx(36.3902212867)
 
 
 def test_flow_stress_increases_with_strain_rate_at_constant_temperature():

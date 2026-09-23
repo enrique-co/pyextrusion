@@ -136,3 +136,52 @@ AA6063_SHEPPARD_1999 = HotWorkingConstitutiveModel(
         "No automatic substitution for AA6060 or any other alloy is implied.",
     ),
 )
+
+
+VERLINDEN_1993_AA6060 = SourceRef(
+    source_kind="literature",
+    reference=(
+        "B. Verlinden, A. Suhadi, L. Delaey, "
+        "A generalized constitutive equation for an AA6060 aluminium alloy, "
+        "Scripta Metallurgica et Materialia 28 (1993) 1441-1446, "
+        "doi:10.1016/0956-716X(93)90496-F"
+    ),
+    detail="Original AA6060 hot-deformation constitutive study",
+)
+
+SARIYARLIOGLU_2024_AA6060_CONSTANTS = SourceRef(
+    source_kind="literature",
+    reference=(
+        "E.C. Sariyarlioglu, T. Welo, J. Ma, "
+        "On the mechanisms of charge weld evolution in aluminum extrusion, "
+        "Journal of Manufacturing Processes 124 (2024) 377-384, "
+        "doi:10.1016/j.jmapro.2024.06.022"
+    ),
+    detail=(
+        "Open-access secondary source explicitly reporting the AA6060 hot-torsion "
+        "constants as derived from Verlinden et al. (1993)"
+    ),
+)
+
+AA6060_VERLINDEN_1993 = HotWorkingConstitutiveModel(
+    alloy="AA6060",
+    alpha_mpa_inv=0.035,
+    n=4.67,
+    activation_energy_j_mol=161_000.0,
+    ln_A=math.log(7.6301e10),
+    provenance=(
+        VERLINDEN_1993_AA6060,
+        SARIYARLIOGLU_2024_AA6060_CONSTANTS,
+    ),
+    notes=(
+        "A = 7.6301e10 s^-1; ln(A) is stored internally for numerical consistency.",
+        (
+            "The numerical constants were verified through Sariyarlioglu et al. (2024), "
+            "which explicitly attributes them to the hot torsion tests of Verlinden et al. (1993)."
+        ),
+        (
+            "PyExtrusion does not infer that these constants are calibrated to every AA6060 "
+            "chemistry, homogenization state, billet supplier, or production lot."
+        ),
+    ),
+)

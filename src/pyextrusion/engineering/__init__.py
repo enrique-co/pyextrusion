@@ -11,8 +11,11 @@ from .extrusion_flow import (
     sheppard_deformation_semiangle_deg,
 )
 from .materials import (
+    AA6060_VERLINDEN_1993,
     AA6063_SHEPPARD_1999,
+    SARIYARLIOGLU_2024_AA6060_CONSTANTS,
     SHEPPARD_1999_TABLE_4_1_AA6063,
+    VERLINDEN_1993_AA6060,
     UNIVERSAL_GAS_CONSTANT_J_MOL_K,
     HotWorkingConstitutiveModel,
 )
@@ -69,6 +72,7 @@ from .rheology import (
 )
 
 __all__ = [
+    "AA6060_VERLINDEN_1993",
     "AA6063_SHEPPARD_1999",
     "AxisymmetricPressureBreakdown",
     "Confidence",
@@ -83,6 +87,7 @@ __all__ = [
     "Interval",
     "PressEngineeringSpec",
     "RamOperatingRange",
+    "SARIYARLIOGLU_2024_AA6060_CONSTANTS",
     "SHEPPARD_1999_EQ_4_3",
     "SHEPPARD_1999_EQ_4_4",
     "SHEPPARD_1999_EQ_4_5",
@@ -92,6 +97,7 @@ __all__ = [
     "SourceRef",
     "SpecificEnergyBasis",
     "UNIVERSAL_GAS_CONSTANT_J_MOL_K",
+    "VERLINDEN_1993_AA6060",
     "check_force_capacity",
     "check_press_force_capacity",
     "axisymmetric_pressure_breakdown",
