@@ -237,6 +237,7 @@ class AxisymmetricPressureBreakdown:
             self.breakthrough_increment_mpa,
             "breakthrough_increment_mpa",
             ValueError,
+            minimum=0.0,
         )
         assert friction_factor is not None and increment is not None
 
