@@ -199,9 +199,12 @@ def breakthrough_pressure_increment_mpa(
 
 @dataclass(frozen=True)
 class AxisymmetricPressureBreakdown:
-    """Traceable axisymmetric direct-extrusion pressure decomposition.
+    """Axisymmetric direct-extrusion pressure decomposition.
 
-    This result represents the rod/equivalent-axisymmetric model only. It is not
+    Only the independent model inputs are stored. Pressure components and force
+    are derived properties so callers cannot construct contradictory results.
+
+    This object represents the rod/equivalent-axisymmetric model only. It is not
     a porthole-die, bridge-die or shaped-section correction model.
     """
 
@@ -210,11 +213,7 @@ class AxisymmetricPressureBreakdown:
     friction_factor_m: float
     billet_contact_length_mm: float
     container_diameter_mm: float
-    deformation_pressure_mpa: float
-    container_friction_pressure_mpa: float
     breakthrough_increment_mpa: float
-    peak_pressure_mpa: float
-    required_force_mn: float
     model_scope: str = "axisymmetric_equivalent_direct_extrusion"
     provenance: tuple[SourceRef, ...] = (
         SHEPPARD_1999_EQ_4_3,
@@ -223,41 +222,83 @@ class AxisymmetricPressureBreakdown:
     )
 
     def __post_init__(self) -> None:
-        for field, value in (
-            ("flow_stress_mpa", self.flow_stress_mpa),
-            ("extrusion_ratio", self.extrusion_ratio),
-            ("friction_factor_m", self.friction_factor_m),
-            ("billet_contact_length_mm", self.billet_contact_length_mm),
-            ("container_diameter_mm", self.container_diameter_mm),
-            ("deformation_pressure_mpa", self.deformation_pressure_mpa),
-            ("container_friction_pressure_mpa", self.container_friction_pressure_mpa),
-            ("peak_pressure_mpa", self.peak_pressure_mpa),
-            ("required_force_mn", self.required_force_mn),
-        ):
-            number = require_number(value, field, ValueError, minimum=0.0)
-            assert number is not None
-            object.__setattr__(self, field, number)
-
-        increment = require_number(self.breakthrough_increment_mpa, "breakthrough_increment_mpa", ValueError)
-        assert increment is not None
-        object.__setattr__(self, "breakthrough_increment_mpa", increment)
+        stress = _nonnegative(self.flow_stress_mpa, "flow_stress_mpa")
+        ratio = _pressure_model_ratio(self.extrusion_ratio)
+        friction_factor = require_number(
+            self.friction_factor_m,
+            "friction_factor_m",
+            ValueError,
+            minimum=0.0,
+            maximum=1.0,
+        )
+        contact_length = _nonnegative(self.billet_contact_length_mm, "billet_contact_length_mm")
+        diameter = _positive(self.container_diameter_mm, "container_diameter_mm")
+        increment = require_number(
+            self.breakthrough_increment_mpa,
+            "breakthrough_increment_mpa",
+            ValueError,
+        )
+        assert friction_factor is not None and increment is not None
 
         if not isinstance(self.model_scope, str) or not self.model_scope.strip():
             raise ValueError("model_scope must be a non-empty string")
-        object.__setattr__(self, "model_scope", self.model_scope.strip())
 
         provenance = tuple(self.provenance)
         if any(not isinstance(item, SourceRef) for item in provenance):
             raise ValueError("pressure provenance entries must be SourceRef instances")
+
+        object.__setattr__(self, "flow_stress_mpa", stress)
+        object.__setattr__(self, "extrusion_ratio", ratio)
+        object.__setattr__(self, "friction_factor_m", friction_factor)
+        object.__setattr__(self, "billet_contact_length_mm", contact_length)
+        object.__setattr__(self, "container_diameter_mm", diameter)
+        object.__setattr__(self, "breakthrough_increment_mpa", increment)
+        object.__setattr__(self, "model_scope", self.model_scope.strip())
         object.__setattr__(self, "provenance", provenance)
+
+        if self.peak_pressure_mpa < 0.0:
+            raise ValueError("peak pressure must be non-negative for a usable pressure breakdown")
+
+    @property
+    def deformation_pressure_mpa(self) -> float:
+        return axisymmetric_steady_deformation_pressure_mpa(
+            self.flow_stress_mpa,
+            self.extrusion_ratio,
+        )
+
+    @property
+    def container_friction_pressure_mpa(self) -> float:
+        return container_friction_pressure_increment_mpa(
+            self.flow_stress_mpa,
+            self.friction_factor_m,
+            self.billet_contact_length_mm,
+            self.container_diameter_mm,
+        )
 
     @property
     def steady_pressure_mpa(self) -> float:
         return self.deformation_pressure_mpa + self.container_friction_pressure_mpa
 
+    @property
+    def peak_pressure_mpa(self) -> float:
+        return self.steady_pressure_mpa + self.breakthrough_increment_mpa
+
+    @property
+    def required_force_mn(self) -> float:
+        area_m2 = circular_area_m2_from_diameter_mm(self.container_diameter_mm)
+        return force_mn_from_specific_pressure_mpa(self.peak_pressure_mpa, area_m2)
+
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
-        data["steady_pressure_mpa"] = self.steady_pressure_mpa
+        data.update(
+            {
+                "deformation_pressure_mpa": self.deformation_pressure_mpa,
+                "container_friction_pressure_mpa": self.container_friction_pressure_mpa,
+                "steady_pressure_mpa": self.steady_pressure_mpa,
+                "peak_pressure_mpa": self.peak_pressure_mpa,
+                "required_force_mn": self.required_force_mn,
+            }
+        )
         return data
 
 
@@ -269,33 +310,12 @@ def axisymmetric_pressure_breakdown(
     container_diameter_mm: float,
     breakthrough_increment_mpa: float,
 ) -> AxisymmetricPressureBreakdown:
-    """Compose the axisymmetric pressure model and convert peak pressure to force."""
-    deformation = axisymmetric_steady_deformation_pressure_mpa(flow_stress_mpa, extrusion_ratio)
-    friction = container_friction_pressure_increment_mpa(
-        flow_stress_mpa,
-        friction_factor_m,
-        billet_contact_length_mm,
-        container_diameter_mm,
-    )
-    increment = require_number(breakthrough_increment_mpa, "breakthrough_increment_mpa", ValueError)
-    assert increment is not None
-
-    peak = deformation + friction + increment
-    if not math.isfinite(peak) or peak < 0.0:
-        raise ValueError("peak pressure must be non-negative and finite")
-
-    area_m2 = circular_area_m2_from_diameter_mm(container_diameter_mm)
-    required_force = force_mn_from_specific_pressure_mpa(peak, area_m2)
-
+    """Build a non-contradictory axisymmetric pressure breakdown."""
     return AxisymmetricPressureBreakdown(
         flow_stress_mpa=flow_stress_mpa,
         extrusion_ratio=extrusion_ratio,
         friction_factor_m=friction_factor_m,
         billet_contact_length_mm=billet_contact_length_mm,
         container_diameter_mm=container_diameter_mm,
-        deformation_pressure_mpa=deformation,
-        container_friction_pressure_mpa=friction,
-        breakthrough_increment_mpa=increment,
-        peak_pressure_mpa=peak,
-        required_force_mn=required_force,
+        breakthrough_increment_mpa=breakthrough_increment_mpa,
     )
