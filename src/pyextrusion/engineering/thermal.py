@@ -265,7 +265,13 @@ class StuweSurfaceExitTemperatureEstimate:
     provenance: tuple[SourceRef, ...] = (SHEPPARD_1999_STUWE_THERMAL_MODEL,)
 
     def __post_init__(self) -> None:
-        billet_temperature = require_number(self.billet_temperature_c, "billet_temperature_c", ValueError)
+        billet_temperature = require_number(
+            self.billet_temperature_c,
+            "billet_temperature_c",
+            ValueError,
+            minimum=-273.15,
+            exclusive_minimum=True,
+        )
         flow_stress = _nonnegative(self.flow_stress_mpa, "flow_stress_mpa")
         ratio = require_number(
             self.extrusion_ratio,
