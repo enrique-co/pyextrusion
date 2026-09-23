@@ -8,6 +8,15 @@ A principal technical reference used during development is:
 
 **P. K. Saha, _Aluminum Extrusion Technology_.**
 
+Additional analytical models implemented in the engineering package are traced
+to:
+
+**T. Sheppard, _Extrusion of Aluminium Alloys_ (1999).**
+
+PyExtrusion uses Sheppard's AA6063 hot-working constants, modified Feltham
+strain-rate context, axisymmetric pressure correlations and the Stuwe
+surface-temperature approximation reproduced by Sheppard.
+
 Relevant topics include:
 
 - conventional direct extrusion;

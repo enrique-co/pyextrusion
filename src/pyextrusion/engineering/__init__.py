@@ -76,6 +76,12 @@ from .thermal import (
     stuwe_die_land_temperature_rise_c,
     stuwe_surface_exit_temperature_estimate,
 )
+from .thermomechanical import (
+    AA6063_DIRECT_OPERATION_LIMITATIONS,
+    AA6063_DIRECT_OPERATION_MODEL,
+    AA6063DirectExtrusionOperationEstimate,
+    aa6063_direct_extrusion_operation_estimate,
+)
 from .rheology import (
     flow_stress_mpa,
     log_zener_hollomon_parameter,
@@ -87,6 +93,9 @@ from .rheology import (
 __all__ = [
     "AA6060_VERLINDEN_1993",
     "AA6063_SHEPPARD_1999",
+    "AA6063_DIRECT_OPERATION_LIMITATIONS",
+    "AA6063_DIRECT_OPERATION_MODEL",
+    "AA6063DirectExtrusionOperationEstimate",
     "AxisymmetricPressureBreakdown",
     "Confidence",
     "EnergyComparison",
@@ -116,6 +125,7 @@ __all__ = [
     "ThermalMaterialProperties",
     "UNIVERSAL_GAS_CONSTANT_J_MOL_K",
     "VERLINDEN_1993_AA6060",
+    "aa6063_direct_extrusion_operation_estimate",
     "check_force_capacity",
     "check_press_force_capacity",
     "axisymmetric_pressure_breakdown",
