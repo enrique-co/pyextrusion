@@ -102,6 +102,19 @@ def axisymmetric_steady_deformation_pressure_mpa(
     return value
 
 
+def _eq_4_4_deformation_term_mpa(
+    flow_stress_mpa: float,
+    extrusion_ratio: float,
+) -> float:
+    """Return the rounded deformation term used inside Sheppard Eq. 4.4."""
+    stress = _nonnegative(flow_stress_mpa, "flow_stress_mpa")
+    ratio = _pressure_model_ratio(extrusion_ratio)
+    value = stress * (0.171 + 1.86 * math.log(ratio))
+    if not math.isfinite(value) or value < 0.0:
+        raise ValueError("Eq. 4.4 deformation term is outside the representable finite range")
+    return value
+
+
 def container_friction_pressure_increment_mpa(
     flow_stress_mpa: float,
     friction_factor_m: float,
@@ -147,7 +160,7 @@ def axisymmetric_steady_pressure_mpa(
     container_diameter_mm: float,
 ) -> float:
     """Return axisymmetric steady direct-extrusion pressure including container friction."""
-    base = axisymmetric_steady_deformation_pressure_mpa(flow_stress_mpa, extrusion_ratio)
+    base = _eq_4_4_deformation_term_mpa(flow_stress_mpa, extrusion_ratio)
     friction = container_friction_pressure_increment_mpa(
         flow_stress_mpa,
         friction_factor_m,
@@ -262,7 +275,7 @@ class AxisymmetricPressureBreakdown:
 
     @property
     def deformation_pressure_mpa(self) -> float:
-        return axisymmetric_steady_deformation_pressure_mpa(
+        return _eq_4_4_deformation_term_mpa(
             self.flow_stress_mpa,
             self.extrusion_ratio,
         )
