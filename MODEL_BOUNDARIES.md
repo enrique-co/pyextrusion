@@ -24,7 +24,8 @@ PyExtrusion includes selected analytical estimates for AA6063 direct extrusion:
 - modified Feltham mean strain rate;
 - Zener-Hollomon / Sheppard-Wright flow stress;
 - Sheppard axisymmetric pressure, container friction, breakthrough pressure and required force;
-- Stuwe three-component surface exit-temperature estimate.
+- Stuwe three-component surface exit-temperature estimate;
+- Saha local thermal source terms for deformation, billet-container friction, dead-metal-zone friction and die-bearing friction.
 
 These estimates are scoped to a single operation point and keep their units,
 source traceability and limitations explicit.
@@ -35,6 +36,8 @@ PyExtrusion does not currently provide a complete model for:
 - shaped-section, porthole-die or bridge-die pressure corrections;
 - Integral Profile thermal reconstruction;
 - transient thermal evolution through billet, container, die and tooling;
+- reconstruction of Saha's complete finite-difference temperature field and its omitted boundary conditions;
+- conversion of Saha local heat-source terms into an exit-temperature prediction without an explicit transient heat-balance model;
 - metallurgical quality prediction;
 - die stress or die-life prediction;
 - die availability;

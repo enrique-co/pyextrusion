@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Adds source-traced Saha thermal source terms for local deformation heat generation and frictional heat fluxes at billet-container, dead-metal-zone and die-bearing interfaces.
+- Keeps Saha's documented 45° semi-dead-metal-zone assumption isolated from the Sheppard/Feltham model.
+- Adds complete-sticking die-bearing shear/heat-flux helpers without claiming a transient temperature or exit-temperature solution.
 - Corrects the physical process boundary for downstream saw kerfs.
 - Treats `cut_length_mm` as net finished-bar length; puller and final-saw kerfs now reserve additional extruded material instead of being added only after billet sizing.
 - Propagates puller/final-saw kerf allowance into billet geometry, runout-table occupancy and technical extrusion time.
