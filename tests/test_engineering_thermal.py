@@ -5,10 +5,12 @@ import pytest
 from pyextrusion.engineering import (
     AA6063_SHEPPARD_1999,
     SHEPPARD_1999_ALUMINIUM_THERMAL_PROPERTIES,
+    SHEPPARD_1999_TOOL_STEEL_THERMAL_PROPERTIES,
     StuweSurfaceExitTemperatureEstimate,
     ThermalMaterialProperties,
     flow_stress_mpa,
     modified_feltham_mean_strain_rate_s_1,
+    sheppard_billet_container_interface_temperature_c,
     stuwe_container_heating_depth_mm,
     stuwe_container_wall_temperature_rise_c,
     stuwe_deformation_temperature_rise_c,
@@ -179,3 +181,49 @@ def test_extreme_thermal_properties_cannot_silently_create_nonfinite_diffusivity
     )
     with pytest.raises(ValueError, match="thermal diffusivity"):
         _ = props.thermal_diffusivity_m2_s
+
+
+def test_sheppard_tool_steel_thermal_properties_match_source_values():
+    props = SHEPPARD_1999_TOOL_STEEL_THERMAL_PROPERTIES
+
+    assert props.thermal_conductivity_w_m_k == pytest.approx(32.65)
+    assert props.density_kg_m3 == pytest.approx(7860.0)
+    assert props.specific_heat_j_kg_k == pytest.approx(489.76)
+    assert props.thermal_effusivity_w_sqrt_s_m2_k == pytest.approx(
+        math.sqrt(32.65 * 7860.0 * 489.76)
+    )
+
+
+def test_sheppard_thermal_effusivity_ratio_regression():
+    aluminium = SHEPPARD_1999_ALUMINIUM_THERMAL_PROPERTIES
+    steel = SHEPPARD_1999_TOOL_STEEL_THERMAL_PROPERTIES
+
+    ratio = (
+        steel.thermal_effusivity_w_sqrt_s_m2_k
+        / aluminium.thermal_effusivity_w_sqrt_s_m2_k
+    )
+
+    assert ratio == pytest.approx(0.4581598976908614)
+
+
+def test_sheppard_billet_container_interface_temperature_regression():
+    value = sheppard_billet_container_interface_temperature_c(
+        billet_temperature_c=470.0,
+        container_temperature_c=430.0,
+    )
+
+    assert value == pytest.approx(457.4318338224387)
+
+
+def test_sheppard_interface_temperature_is_between_body_temperatures():
+    hot_to_cold = sheppard_billet_container_interface_temperature_c(470.0, 430.0)
+    cold_to_hot = sheppard_billet_container_interface_temperature_c(470.0, 480.0)
+
+    assert 430.0 < hot_to_cold < 470.0
+    assert 470.0 < cold_to_hot < 480.0
+
+
+def test_sheppard_interface_temperature_does_not_imply_friction_heat_partition():
+    value = sheppard_billet_container_interface_temperature_c(470.0, 430.0)
+
+    assert isinstance(value, float)

@@ -22,6 +22,21 @@ SHEPPARD_1999_ALUMINIUM_THERMAL_PROPERTIES_SOURCE = SourceRef(
     detail="Constant thermal properties stated for aluminium alloys in the integral-profile discussion",
 )
 
+SHEPPARD_1999_TOOL_STEEL_THERMAL_PROPERTIES_SOURCE = SourceRef(
+    source_kind="literature",
+    reference="T. Sheppard, Extrusion of Aluminium Alloys (1999), section 2.5.4, pp. 56-57",
+    detail="Constant thermal properties stated for normal Cr-V extrusion tooling steels",
+)
+
+SHEPPARD_1999_INTERFACE_TEMPERATURE_EQ_2_25 = SourceRef(
+    source_kind="literature",
+    reference="T. Sheppard, Extrusion of Aluminium Alloys (1999), Eq. 2.25, p. 56",
+    detail=(
+        "Billet/tooling interface temperature from Fourier heat flow with linear "
+        "subcutaneous temperature distributions"
+    ),
+)
+
 
 def _positive(value: float, field: str) -> float:
     result = require_number(value, field, ValueError, minimum=0.0, exclusive_minimum=True)
@@ -71,9 +86,25 @@ class ThermalMaterialProperties:
             raise ValueError("thermal diffusivity is outside the representable finite range")
         return value
 
+    @property
+    def thermal_effusivity_w_sqrt_s_m2_k(self) -> float:
+        """Return thermal effusivity sqrt(k rho Cp).
+
+        Unit: W*sqrt(s)/(m2*K).
+        """
+        value = math.sqrt(
+            self.thermal_conductivity_w_m_k
+            * self.density_kg_m3
+            * self.specific_heat_j_kg_k
+        )
+        if not math.isfinite(value) or value <= 0.0:
+            raise ValueError("thermal effusivity is outside the representable finite range")
+        return value
+
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["thermal_diffusivity_m2_s"] = self.thermal_diffusivity_m2_s
+        data["thermal_effusivity_w_sqrt_s_m2_k"] = self.thermal_effusivity_w_sqrt_s_m2_k
         return data
 
 
@@ -83,6 +114,62 @@ SHEPPARD_1999_ALUMINIUM_THERMAL_PROPERTIES = ThermalMaterialProperties(
     specific_heat_j_kg_k=1063.9,
     provenance=(SHEPPARD_1999_ALUMINIUM_THERMAL_PROPERTIES_SOURCE,),
 )
+
+SHEPPARD_1999_TOOL_STEEL_THERMAL_PROPERTIES = ThermalMaterialProperties(
+    thermal_conductivity_w_m_k=32.65,
+    density_kg_m3=7860.0,
+    specific_heat_j_kg_k=489.76,
+    provenance=(SHEPPARD_1999_TOOL_STEEL_THERMAL_PROPERTIES_SOURCE,),
+)
+
+
+def sheppard_billet_container_interface_temperature_c(
+    billet_temperature_c: float,
+    container_temperature_c: float,
+    billet_properties: ThermalMaterialProperties = SHEPPARD_1999_ALUMINIUM_THERMAL_PROPERTIES,
+    container_properties: ThermalMaterialProperties = SHEPPARD_1999_TOOL_STEEL_THERMAL_PROPERTIES,
+) -> float:
+    """Return Sheppard Eq. 2.25 billet/container interface temperature.
+
+    Sheppard writes
+
+        (T_B - T_i) / (T_i - T_C)
+            = sqrt(k_C rho_C Cp_C / (k_B rho_B Cp_B))
+
+    after assuming linear temperature distributions in the subcutaneous layers
+    and Fourier heat flow. This is an interface-temperature relation only. It
+    does not calculate frictional heat partition, transient heat flux or a
+    complete billet/container thermal history.
+    """
+    billet_temperature = require_number(
+        billet_temperature_c,
+        "billet_temperature_c",
+        ValueError,
+        minimum=-273.15,
+        exclusive_minimum=True,
+    )
+    container_temperature = require_number(
+        container_temperature_c,
+        "container_temperature_c",
+        ValueError,
+        minimum=-273.15,
+        exclusive_minimum=True,
+    )
+    assert billet_temperature is not None and container_temperature is not None
+
+    if not isinstance(billet_properties, ThermalMaterialProperties):
+        raise ValueError("billet_properties must be ThermalMaterialProperties")
+    if not isinstance(container_properties, ThermalMaterialProperties):
+        raise ValueError("container_properties must be ThermalMaterialProperties")
+
+    ratio = (
+        container_properties.thermal_effusivity_w_sqrt_s_m2_k
+        / billet_properties.thermal_effusivity_w_sqrt_s_m2_k
+    )
+    value = (billet_temperature + ratio * container_temperature) / (1.0 + ratio)
+    if not math.isfinite(value):
+        raise ValueError("interface temperature is outside the representable finite range")
+    return value
 
 
 def stuwe_deformation_temperature_rise_c(

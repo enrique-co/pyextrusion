@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Adds Sheppard Eq. 2.25 billet/container interface-temperature calculation with source-stated aluminium and Cr-V tooling-steel thermal properties.
+- Adds thermal-effusivity reporting while explicitly avoiding any unsupported friction-heat partition claim.
 - Adds source-traced Saha thermal source terms for local deformation heat generation and frictional heat fluxes at billet-container, dead-metal-zone and die-bearing interfaces.
 - Keeps Saha's documented 45° semi-dead-metal-zone assumption isolated from the Sheppard/Feltham model.
 - Adds complete-sticking die-bearing shear/heat-flux helpers without claiming a transient temperature or exit-temperature solution.
