@@ -252,3 +252,59 @@ sequences = compare_production_sequences([press_a, press_b], orders)
 ```
 
 The new comparison APIs require at least two presses, preserve press order, use identical inputs on every press and never declare an automatic winner. See [Multi-press comparison](../user-guide/compare-presses.md).
+
+
+## Engineering analytical models
+
+Advanced analytical helpers live in the dedicated subpackage:
+
+```python
+from pyextrusion.engineering import (
+    AA6063_SHEPPARD_1999,
+    axisymmetric_pressure_breakdown,
+    breakthrough_pressure_increment_mpa_from_log_z,
+    flow_stress_mpa,
+    log_zener_hollomon_parameter,
+    modified_feltham_mean_strain_rate_s_1,
+)
+```
+
+A typical mechanical screening chain is:
+
+```python
+strain_rate = modified_feltham_mean_strain_rate_s_1(
+    ram_speed_mm_s,
+    container_diameter_mm,
+    extrusion_ratio,
+)
+
+ln_z = log_zener_hollomon_parameter(
+    strain_rate,
+    billet_temperature_c,
+    AA6063_SHEPPARD_1999,
+)
+
+sigma = flow_stress_mpa(
+    strain_rate,
+    billet_temperature_c,
+    AA6063_SHEPPARD_1999,
+)
+
+breakthrough = breakthrough_pressure_increment_mpa_from_log_z(
+    ln_z,
+    AA6063_SHEPPARD_1999,
+)
+
+pressure = axisymmetric_pressure_breakdown(
+    flow_stress_mpa=sigma,
+    extrusion_ratio=extrusion_ratio,
+    friction_factor_m=friction_factor_m,
+    billet_contact_length_mm=billet_contact_length_mm,
+    container_diameter_mm=container_diameter_mm,
+    breakthrough_increment_mpa=breakthrough,
+)
+```
+
+`pressure.required_force_mn` is the force associated with the **equivalent-axisymmetric baseline** represented by this model. It is not the validated final force requirement of a shaped, bridge or porthole die.
+
+Thermal helpers are also available under `pyextrusion.engineering`, including the limited Stuwe surface estimate, Saha local thermal source terms and Sheppard's billet/tooling interface-temperature relation. PyExtrusion 0.17.0 does **not** provide a production-grade exit-temperature predictor.
