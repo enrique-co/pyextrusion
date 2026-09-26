@@ -7,30 +7,26 @@
 
 **Engineering calculation toolkit for aluminium extrusion**
 
-Current release candidate: **0.16.0**.
+Current release: **0.17.0**.
 
 PyExtrusion is a deterministic Python toolkit for evaluating aluminium profiles on **direct extrusion presses**. The same calculation engine is available through Python, CLI and JSON workflows.
 
-Version 0.16.0 adds multi-press comparison across quantity-free process calculations, single-order planning and production sequences. The direct-extrusion mathematics and the v0.15.0 production-sequence timing model are unchanged.
+Version 0.17.0 extends the production/planning engine with a source-traced engineering layer, basic deterministic economics and corrected downstream saw-kerf accounting. The new engineering models keep their scope explicit: the implemented pressure/force result is an **equivalent-axisymmetric baseline**, not a final porthole-die force prediction, and the thermal models are analytical/source-term baselines rather than a production-grade exit-temperature predictor.
 
-## What changed in 0.16.0
+## What changed in 0.17.0
 
-- Adds `compare_processes(presses, PlanningCase)`.
-- Adds `compare_planning(presses, PlanningCase, PlanningRequest)`.
-- Adds `compare_production_sequences(presses, orders, start_at=None)`.
-- Adds `ProcessComparisonResult`, `PlanningComparisonResult` and `ProductionSequenceComparisonResult`.
-- Requires two or more presses for the comparison APIs.
-- Applies identical technical inputs to every press and preserves the user-supplied press order.
-- Applies the same production-order list, in the same order, to every press in sequence comparisons.
-- Performs no multi-press allocation, load balancing, automatic reordering or automatic winner selection.
-- Adds human-readable comparison tables and strict JSON results.
-- Adds CLI commands `compare-process`, `compare-planning` and `compare-sequence`.
-- Adds stable `PX1013 InvalidComparison`.
-- Keeps JSON input schema `1.1`; the comparison layer reuses existing press, planning-case and sequence inputs.
+- Adds `pyextrusion.engineering` foundations for press engineering metadata, force-limit checks, hydraulic/power/energy identities and source traceability.
+- Adds source-traced AA6063 and AA6060 hot-working constitutive models.
+- Adds modified Feltham mean strain rate, Zener-Hollomon and steady-state flow stress.
+- Adds Sheppard axisymmetric pressure, billet-container friction, breakthrough and equivalent-axisymmetric force baseline calculations.
+- Adds a limited Stuwe surface-temperature estimate, Saha local thermal source terms and Sheppard Eq. 2.25 interface temperature while keeping their thermal limitations explicit.
+- Adds basic deterministic production economics, including recurring production cost, tooling/development cost and sales-margin calculations.
+- Corrects downstream puller/final-saw kerfs so they reserve physical extruded length in billet sizing, table occupancy and technical time.
+- Keeps shaped-section, bridge/porthole pressure corrections, complete transient thermal reconstruction and production-grade exit-temperature prediction outside the current model.
 
 ## Installation
 
-From PyPI after publication:
+From PyPI:
 
 ```bash
 python -m pip install pyextrusion
@@ -39,7 +35,7 @@ python -m pip install pyextrusion
 From a local release wheel:
 
 ```bash
-python -m pip install pyextrusion-0.16.0-py3-none-any.whl
+python -m pip install pyextrusion-0.17.0-py3-none-any.whl
 ```
 
 ## Quick calculation
@@ -178,11 +174,13 @@ Publicly documented calculations include:
 - annual-demand normalisation and an explicit optional 10% supplement;
 - operational planning and time-window capacity calculations;
 - continuous technical calculation of user-supplied order sequences;
-- JSON persistence, validation and multi-press comparison.
+- JSON persistence, validation and multi-press comparison;
+- source-traced engineering baselines for hot-working rheology, equivalent-axisymmetric pressure/force and limited thermal analysis;
+- basic deterministic production economics.
 
 ## Model boundary
 
-PyExtrusion 0.16.0 models **direct aluminium extrusion**. It does not perform full industrial scheduling or complete extrusion-force, thermal, metallurgical, die-life or plant-resource prediction.
+PyExtrusion 0.17.0 models **direct aluminium extrusion**. It does not perform full industrial scheduling or complete extrusion-force, thermal, metallurgical, die-life or plant-resource prediction.
 
 The productivity index is orientative. It is not a physical quantity and must not be used alone as the final industrial selection criterion.
 
