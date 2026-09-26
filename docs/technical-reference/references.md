@@ -14,8 +14,20 @@ to:
 **T. Sheppard, _Extrusion of Aluminium Alloys_ (1999).**
 
 PyExtrusion uses Sheppard's AA6063 hot-working constants, modified Feltham
-strain-rate context, axisymmetric pressure correlations and the Stuwe
-surface-temperature approximation reproduced by Sheppard.
+strain-rate context, axisymmetric pressure correlations, the Stuwe
+surface-temperature approximation reproduced by Sheppard, and the Eq. 2.25
+billet/tooling interface-temperature relation.
+
+For AA6060, PyExtrusion keeps a separate source-traced constitutive dataset
+attributed to **Verlinden, Suhadi and Delaey (1993)** and cross-checked against
+later extrusion literature. The AA6060 and AA6063 parameter sets are not treated
+as interchangeable.
+
+From Saha, PyExtrusion exposes selected local thermal source terms for
+deformation and frictional interfaces. Those terms are not promoted to a full
+finite-difference temperature solver because the complete boundary-condition
+set required for such a reconstruction is not contained in the implemented
+source material.
 
 Relevant topics include:
 
