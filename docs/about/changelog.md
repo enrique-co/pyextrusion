@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.17.0
+
+- Adds the public `pyextrusion.engineering` foundation with strict provenance, metadata, force-limit, hydraulic, power, energy and specific-energy helpers.
+- Adds basic deterministic production economics with recurring production cost, material/scrap economics, sales-margin calculations, one-time tooling/development cost, die-trial surcharges and optional customer tooling revenue.
+- Corrects the physical boundary for downstream saw kerfs: puller and final-saw kerfs now reserve extruded material in billet sizing, runout-table occupancy and technical extrusion time, while billet-saw kerf remains an upstream stock loss.
+- Reframes startup and complexity scrap as planning allowances rather than physical extruded-length/time contributions.
+- Adds source-traced AA6063 hot-working constants from Sheppard and AA6060 hot-working constants attributed to Verlinden et al.; the two alloy models remain explicitly separate.
+- Adds modified Feltham mean strain rate, Zener-Hollomon and Sheppard-Wright steady-state flow-stress calculations with strict validation.
+- Adds Sheppard axisymmetric pressure correlations: deformation pressure, billet-container friction, breakthrough increment, peak pressure and equivalent-axisymmetric required-force baseline.
+- Keeps the pressure/force model explicitly scoped to equivalent-axisymmetric direct extrusion; shaped-section, bridge-die and porthole-die corrections are not inferred or approximated with hidden multipliers.
+- Adds an AA6063 single-operation thermomechanical composition that keeps mechanical and thermal model boundaries visible.
+- Adds the Sheppard/Stuwe three-component surface-temperature estimate as a limited analytical baseline, not as a production-grade exit-temperature predictor.
+- Adds source-traced Saha local thermal source terms for deformation, billet-container friction, dead-metal-zone friction and die-bearing friction.
+- Keeps Saha's documented 45 degree semi-dead-metal-zone assumption isolated from the Sheppard/Feltham geometry model.
+- Adds complete-sticking die-bearing shear/heat-flux helpers without claiming a transient temperature field or exit-temperature solution.
+- Adds Sheppard Eq. 2.25 billet/tooling interface-temperature calculation with source-stated aluminium and Cr-V tooling-steel thermal properties and thermal-effusivity reporting.
+- Explicitly avoids interpreting Eq. 2.25 as a source-exact friction-heat partition model.
+- Keeps Saha's omitted boundary conditions, Integral Profile reconstruction, transient tooling heat storage and production-grade exit-temperature prediction outside the implemented scope.
+- Adds regression coverage across Python 3.10-3.13 for the new engineering and thermomechanical calculations.
+- Keeps the internal PyExtrusion calculation manual private and outside the package, public documentation and website.
+
+
 ## 0.16.0
 
 - Aligns the multi-press comparison layer with the current PyExtrusion calculation engine.
@@ -69,7 +91,7 @@
 - Prevents the optimiser from shortening a billet merely to fit more billets on the runout table.
 - Allows 4, 5 or more billets per continuous pull when geometry permits.
 - Keeps `1_billet_2_profiles` and explicitly limits the supported model to a maximum of two sequential profiles per billet.
-- Adds controlled `supported=False` diagnostics when a scenario would require 3+ profiles per billet.
+- Adds controlled `supported=False` diagnostics when a scenario would require 3+ profiles/billet.
 - Counts multi-billet puller and final-saw losses per pull, including partial final pulls.
 - Corrects multi-billet `cuts_ratio` to use cuts represented by the complete table-occupying pull.
 - Adds `ProcessSpec` / `Process` and `PlanningCase` so process conditions can be defined independently from order quantity.
