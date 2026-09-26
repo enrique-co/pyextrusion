@@ -4,7 +4,7 @@ Understanding what a tool does **not** calculate is as important as understandin
 
 ### Current process scope
 
-PyExtrusion 0.17.0.dev0 is intended for **direct aluminium extrusion**.
+PyExtrusion 0.17.0 is intended for **direct aluminium extrusion**.
 
 ### Current supported production geometry
 
@@ -23,7 +23,7 @@ PyExtrusion includes selected analytical estimates for AA6063 direct extrusion:
 - equivalent axisymmetric geometry;
 - modified Feltham mean strain rate;
 - Zener-Hollomon / Sheppard-Wright flow stress;
-- Sheppard axisymmetric pressure, container friction, breakthrough pressure and required force;
+- Sheppard axisymmetric pressure, container friction, breakthrough pressure and equivalent-axisymmetric force baseline;
 - Stuwe three-component surface exit-temperature estimate;
 - Saha local thermal source terms for deformation, billet-container friction, dead-metal-zone friction and die-bearing friction;
 - Sheppard Eq. 2.25 billet/container interface-temperature relation using source-stated aluminium and Cr-V tooling-steel thermal properties.

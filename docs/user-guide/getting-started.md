@@ -6,7 +6,7 @@ PyExtrusion requires **Python 3.10 or newer**.
 
 ### Install PyExtrusion
 
-From PyPI after publication:
+From PyPI:
 
 ```bash
 python -m pip install pyextrusion
@@ -15,7 +15,7 @@ python -m pip install pyextrusion
 Or install a local release wheel:
 
 ```bash
-python -m pip install pyextrusion-0.16.0-py3-none-any.whl
+python -m pip install pyextrusion-0.17.0-py3-none-any.whl
 ```
 
 Verify the installation:
@@ -24,7 +24,7 @@ Verify the installation:
 pyextrusion info
 ```
 
-The output should identify PyExtrusion 0.16.0.
+The output should identify PyExtrusion 0.17.0.
 
 ### Recommended: use a virtual environment
 
@@ -33,7 +33,7 @@ The output should identify PyExtrusion 0.16.0.
 ```powershell
 py -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
-.venv\Scripts\python -m pip install pyextrusion-0.16.0-py3-none-any.whl
+.venv\Scripts\python -m pip install pyextrusion-0.17.0-py3-none-any.whl
 ```
 
 #### Linux / macOS
@@ -41,7 +41,7 @@ py -m venv .venv
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install pyextrusion-0.16.0-py3-none-any.whl
+.venv/bin/python -m pip install pyextrusion-0.17.0-py3-none-any.whl
 ```
 
 ### Your first PyExtrusion objects

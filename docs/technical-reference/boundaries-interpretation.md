@@ -2,12 +2,13 @@
 
 ## Model boundaries
 
-PyExtrusion does not currently provide a complete model for:
+PyExtrusion includes selected analytical engineering models, but it does not currently provide a complete model for:
 
 - indirect extrusion;
-- full extrusion pressure / required press-force prediction;
-- thermal evolution;
-- exit-temperature prediction;
+- shaped-section, bridge-die or porthole-die final pressure/force prediction;
+- full pressure evolution through the extrusion stroke;
+- transient thermal evolution through billet, container, die and tooling;
+- production-grade exit-temperature prediction;
 - metallurgical-property prediction;
 - die stress or die-life prediction;
 - die correction;
@@ -22,7 +23,9 @@ PyExtrusion does not currently provide a complete model for:
 - automatic order prioritisation;
 - automatic work allocation between presses.
 
-The presence of a press-force field does not currently mean that PyExtrusion validates the extrusion force required by a profile.
+The Sheppard pressure/force calculation in `pyextrusion.engineering` is an **equivalent-axisymmetric baseline**. A value below a configured press-force limit is useful for mechanical feasibility screening, but it is not a validated final force requirement for a real shaped or porthole die.
+
+The thermal functions are likewise bounded: Stuwe is retained as a limited analytical surface estimate, Saha functions expose local thermal source terms, and Sheppard Eq. 2.25 gives an interface-temperature relation. None of these functions is a production-grade exit-temperature predictor.
 
 ---
 

@@ -1,21 +1,26 @@
 # Changelog
 
-## Unreleased
+## 0.17.0
 
-- Adds Sheppard Eq. 2.25 billet/container interface-temperature calculation with source-stated aluminium and Cr-V tooling-steel thermal properties.
-- Adds thermal-effusivity reporting while explicitly avoiding any unsupported friction-heat partition claim.
-- Adds source-traced Saha thermal source terms for local deformation heat generation and frictional heat fluxes at billet-container, dead-metal-zone and die-bearing interfaces.
-- Keeps Saha's documented 45° semi-dead-metal-zone assumption isolated from the Sheppard/Feltham model.
-- Adds complete-sticking die-bearing shear/heat-flux helpers without claiming a transient temperature or exit-temperature solution.
-- Corrects the physical process boundary for downstream saw kerfs.
-- Treats `cut_length_mm` as net finished-bar length; puller and final-saw kerfs now reserve additional extruded material instead of being added only after billet sizing.
-- Propagates puller/final-saw kerf allowance into billet geometry, runout-table occupancy and technical extrusion time.
-- Keeps billet-saw kerf as an upstream billet-stock loss rather than extrusion length.
-- Uses exact order-level puller/final-saw event counts for technical time, including partial final multi-billet pulls.
-- Adds a controlled warning when a partial multi-billet pull can require plant-specific billet-length handling beyond the complete-pull process recommendation.
-- Reframes startup and complexity as modeled planning allowances: they remain in total modeled scrap but no longer inflate the physical `extruded_losses_kg` / real-gross extrusion boundary or extrusion time.
-- Adds physical mass/time balance regression coverage for one-pull, double-profile and multi-billet cases.
-- This correction can slightly increase calculated billet length and technical time for processes with non-zero downstream saw kerfs.
+- Adds the public `pyextrusion.engineering` foundation with strict provenance, metadata, force-limit, hydraulic, power, energy and specific-energy helpers.
+- Adds basic deterministic production economics with recurring production cost, material/scrap economics, sales-margin calculations, one-time tooling/development cost, die-trial surcharges and optional customer tooling revenue.
+- Corrects the physical boundary for downstream saw kerfs: puller and final-saw kerfs now reserve extruded material in billet sizing, runout-table occupancy and technical extrusion time, while billet-saw kerf remains an upstream stock loss.
+- Reframes startup and complexity scrap as planning allowances rather than physical extruded-length/time contributions.
+- Adds source-traced AA6063 hot-working constants from Sheppard and AA6060 hot-working constants attributed to Verlinden et al.; the two alloy models remain explicitly separate.
+- Adds modified Feltham mean strain rate, Zener-Hollomon and Sheppard-Wright steady-state flow-stress calculations with strict validation.
+- Adds Sheppard axisymmetric pressure correlations: deformation pressure, billet-container friction, breakthrough increment, peak pressure and equivalent-axisymmetric required-force baseline.
+- Keeps the pressure/force model explicitly scoped to equivalent-axisymmetric direct extrusion; shaped-section, bridge-die and porthole-die corrections are not inferred or approximated with hidden multipliers.
+- Adds an AA6063 single-operation thermomechanical composition that keeps mechanical and thermal model boundaries visible.
+- Adds the Sheppard/Stuwe three-component surface-temperature estimate as a limited analytical baseline, not as a production-grade exit-temperature predictor.
+- Adds source-traced Saha local thermal source terms for deformation, billet-container friction, dead-metal-zone friction and die-bearing friction.
+- Keeps Saha's documented 45 degree semi-dead-metal-zone assumption isolated from the Sheppard/Feltham geometry model.
+- Adds complete-sticking die-bearing shear/heat-flux helpers without claiming a transient temperature field or exit-temperature solution.
+- Adds Sheppard Eq. 2.25 billet/tooling interface-temperature calculation with source-stated aluminium and Cr-V tooling-steel thermal properties and thermal-effusivity reporting.
+- Explicitly avoids interpreting Eq. 2.25 as a source-exact friction-heat partition model.
+- Keeps Saha's omitted boundary conditions, Integral Profile reconstruction, transient tooling heat storage and production-grade exit-temperature prediction outside the implemented scope.
+- Adds regression coverage across Python 3.10-3.13 for the new engineering and thermomechanical calculations.
+- Keeps the internal PyExtrusion calculation manual private and outside the package, public documentation and website.
+
 
 ## 0.16.0
 
