@@ -170,4 +170,59 @@ T_B + \Delta T_1 + \Delta T_2 + \Delta T_3
 a=\frac{k}{\rho C_p}
 \]
 
-This is a surface estimate, not a complete transient thermal field.
+This is a limited analytical surface estimate, not a complete transient thermal field and not a production-grade exit-temperature predictor.
+
+
+### Saha local thermal source terms
+
+PyExtrusion exposes selected local source terms from Saha without converting them into an exit temperature:
+
+\[
+U'''=\bar\sigma\dot{\bar\varepsilon}
+\]
+
+\[
+q_{container}=\frac{\bar\sigma V_R}{\sqrt3}
+\]
+
+\[
+q_{DMZ}=\frac{\bar\sigma V_{m,j}}{\sqrt3}
+\]
+
+\[
+q_{bearing}=\tau_f V_E
+\]
+
+For complete sticking at the die bearing:
+
+\[
+\tau_f=\frac{\bar\sigma}{\sqrt3}
+\]
+
+These are local heat-generation/heat-flux terms. A transient heat balance, heat partition and boundary conditions are still required before an exit temperature can be predicted.
+
+### Sheppard billet/tooling interface temperature
+
+With thermal effusivity
+
+\[
+e=\sqrt{k\rho C_p}
+\]
+
+Sheppard Eq. 2.25 gives the interface relation
+
+\[
+\frac{T_B-T_i}{T_i-T_C}=\frac{e_C}{e_B}
+\]
+
+or
+
+\[
+T_i=\frac{T_B+(e_C/e_B)T_C}{1+e_C/e_B}
+\]
+
+This relation predicts an interface temperature under its stated conduction assumptions. It does not define the partition of newly generated friction heat.
+
+### Force interpretation
+
+The pressure/force result above is deliberately named \(F_{baseline}\). It is an equivalent-axisymmetric mechanical screening result. It does not include shaped-profile or bridge/porthole-die pressure corrections and must not be presented as the final force requirement of a real porthole die.
