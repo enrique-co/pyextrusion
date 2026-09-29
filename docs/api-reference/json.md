@@ -1,6 +1,14 @@
 # JSON workflows
 
-PyExtrusion 0.16.0 writes **schema version 1.1**. Historical schemas `0.2` through `1.0` remain readable.
+PyExtrusion writes **schema version 1.1**. Historical schemas `0.2` through `1.0` remain readable.
+
+## Physical butt contract
+
+The JSON input key remains `butt_mm`, in `production` or `process`: physical residual thickness inside the container. Existing physical mm values are not converted by the caller. `null` continues to select the physical default/rule. Schema versions and input keys are unchanged.
+
+The press field `billet_kg_per_mm_override` still controls the mass per mm of original incoming billet, including billet-saw loss. It does not replace `rho * container_area` for butt mass. When absent or `null`, the incoming-billet coefficient is geometric.
+
+Calculation JSON adds `billet.butt_mass_kg`, `billet.butt_equivalent_billet_mm` and `billet.mass_coefficient_source`. These are output trace fields, not additional inputs. Quantity-free process JSON exposes `butt_mass_kg`, `butt_equivalent_billet_mm` and `billet_mass_coefficient_source`. Existing result fields are retained. Consumers requiring an exact result-key set should accept these additive fields.
 
 ## Press JSON
 

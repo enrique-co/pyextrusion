@@ -164,7 +164,34 @@ where:
 
 This coefficient links material mass to billet length.
 
-If a plant has a measured or controlled billet mass coefficient, PyExtrusion can use a plant-specific value instead of relying solely on theoretical geometry.
+If a plant has a measured or controlled billet mass coefficient, `billet_kg_per_mm_override` replaces this incoming-billet coefficient, not the physical butt density or container section. Its source is exposed as `geometric` or `user_plant_override`.
+
+## Physical butt and equivalent incoming-billet length
+
+`butt_mm` is the physical residual thickness inside the filled container, in front of the dummy block. It is not a length of the original, smaller-diameter billet. With areas in m² and lengths in mm:
+
+\[
+M_{butt}=\rho A_c\frac{L_{butt}}{1000},\qquad
+L_{butt,eq}=\frac{M_{butt}}{C_{B,effective}}
+\]
+
+Here `C_B,effective` is the incoming-billet mass coefficient in kg/mm: geometry/density by default, or the explicit user/plant override. The initial billet length is:
+
+\[
+L_{billet}=\frac{M_{extruded}}{C_{B,effective}}+L_{butt,eq}
+\]
+
+The through-die mass includes good product, front discard and downstream kerfs. The butt is added **once per billet**, including one billet producing two sequential pulls. Billet-saw loss is upstream and remains `C_B,effective * billet_saw_mm` per billet.
+
+The existing volume-based upsetting relation is unchanged:
+
+\[
+L_{upset}=L_{billet}(D_b/D_c)^2
+\]
+
+With the geometric coefficient it also equals `1000 * M_extruded / (rho * A_c) + L_butt`. With an independently measured incoming-billet coefficient, the mass/equivalent-length contract still holds, but this second identity is not generally equal to the geometric upsetting relation. Do not reinterpret that override as a new container density or apply a second butt conversion in pressure calculations.
+
+The mathematical equal-diameter limit gives `L_butt,eq = L_butt` for geometric coefficients. Press configuration validation continues to require `D_c > D_b`; the limiting identity does not relax the press input domain.
 
 ---
 

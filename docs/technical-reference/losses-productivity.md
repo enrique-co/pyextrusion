@@ -7,7 +7,9 @@ PyExtrusion calculates the billet length required by the selected supported proc
 The public output can distinguish between:
 
 - a calculated billet length with full numerical precision;
-- a practical recommended billet length rounded to a whole millimetre.
+- a practical recommended billet length rounded **up** with `ceil` to a whole millimetre.
+
+Display rounding to the nearest mm is a different operation. Feasibility limits use the full-precision calculated length, not either displayed value.
 
 The recommended whole-millimetre value is intended as an engineering convenience. Users should still apply plant-specific billet-cutting tolerances and operating practice.
 
@@ -55,6 +57,8 @@ Scrap_{fixed,\%}
 
 ### Additional modeled allowances
 
+The physical butt loss is calculated separately from these planning allowances. See the physical definition below.
+
 PyExtrusion can also represent additional planning allowances such as:
 
 - startup allowance;
@@ -85,6 +89,14 @@ Startup and complexity are **modeled planning allowances**, not additional physi
 These categories are calculation aids. They are not a universal scrap standard for every extrusion plant.
 
 ---
+
+## Physical butt mass
+
+`butt_mm` is the residual thickness in the container. With `A_c` in m², butt mass per billet is `rho * A_c * butt_mm / 1000`, even when an incoming-billet kg/mm override is supplied. The incoming-billet equivalent is this mass divided by the effective billet kg/mm coefficient. Never multiply the physical thickness directly by the incoming-billet coefficient when the two sections differ.
+
+Order-level butt scrap is the number of billets times this single-billet mass. The number of sequential pulls does not multiply the number of butts. Billet-saw scrap still uses the incoming-billet coefficient; front discard, puller and final saw losses retain their existing through-die basis.
+
+Changing butt thickness can change billet feasibility, selected cuts/family, losses and derived scores. If the family and events remain unchanged, through-die mass, good mass, extrusion time and net kg/h remain unchanged. A loss-based score can change without a change in physical net productivity.
 
 ## Saw kerf convention
 

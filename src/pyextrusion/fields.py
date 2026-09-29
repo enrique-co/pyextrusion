@@ -56,9 +56,12 @@ _FIELD_LIST = (
     _f("billet.length_mm", "mm", "float", "Mathematical total billet length used for the recommended configuration."),
     _f("billet.recommended_length_mm", "mm", "int", "Industrial suggestion obtained by rounding the mathematical billet length upward to the next whole millimetre."),
     _f("billet.count", "count", "int", "Number of billets required for the production quantity."),
-    _f("billet.butt_mm", "mm", "float", "Butt-discard length applied to the calculation."),
+    _f("billet.butt_mm", "mm", "float", "Physical residual butt thickness inside the container, not incoming-billet length."),
     _f("billet.butt_source", "text", "str", "Origin of butt value: default_rule or user_override."),
     _f("billet.kg_per_mm", "kg/mm", "float", "Billet mass coefficient derived from actual billet geometry/density or supplied override."),
+    _f("billet.butt_mass_kg", "kg/billet", "float | None", "One physical butt: density times container area times physical thickness in metres."),
+    _f("billet.butt_equivalent_billet_mm", "mm", "float | None", "Physical butt mass divided by the effective incoming-billet kg/mm coefficient."),
+    _f("billet.mass_coefficient_source", "text", "str | None", "Incoming-billet coefficient source: geometric or user_plant_override."),
 
     _f("production.profiles_per_billet", "profiles/billet", "int", "Complete sequential pulls produced by one billet; maximum supported value is 2."),
     _f("production.billets_per_pull", "billets/pull", "int", "Number of billets grouped into one continuous pull; dynamically limited by billet and table geometry."),

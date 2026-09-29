@@ -1,4 +1,5 @@
 import json
+import math
 import sys
 import pytest
 
@@ -141,7 +142,10 @@ def test_one_billet_two_profiles_has_first_priority_when_valid():
     assert "1_billet_2_profiles" in r.valid_configurations
     assert r.recommended_configuration == "1_billet_2_profiles"
     cfg = next(c for c in r.configurations if c.name == "1_billet_2_profiles")
-    assert cfg.billet_length_mm == pytest.approx(2 * next(c for c in r.configurations if c.name == "1_billet_1_profile").billet_useful_length_mm + r.butt_mm)
+    p = press()
+    butt_mass = p.density_kg_m3 * math.pi * p.container_diameter_mm**2 / 4 * r.butt_mm / 1e9
+    # Two through-die contributions, one physical container-section butt.
+    assert cfg.billet_length_mm == pytest.approx(2 * next(c for c in r.configurations if c.name == "1_billet_1_profile").billet_useful_length_mm + butt_mass / p.billet_weight_kg_per_mm)
     assert r.dead_time_events == (r.billets - 1) + r.billets
 
 
@@ -205,7 +209,8 @@ def test_multi_billet_front_scrap_recalculates_billet_geometry():
     expected_useful = 4.0 * expected_physical_per_billet / 0.087
     assert cfg.length_per_billet_m == pytest.approx(expected_physical_per_billet)
     assert cfg.billet_useful_length_mm == pytest.approx(expected_useful)
-    assert cfg.billet_length_mm == pytest.approx(expected_useful + r.butt_mm)
+    butt_mass = p.density_kg_m3 * math.pi * p.container_diameter_mm**2 / 4 * r.butt_mm / 1e9
+    assert cfg.billet_length_mm == pytest.approx(expected_useful + butt_mass / 0.087)
     assert cfg.total_configuration_length_m == pytest.approx(
         cfg.billets_per_pull * expected_physical_per_billet
     )
@@ -585,8 +590,9 @@ def test_v080_unknown_case_adjustment_has_px1010():
 def test_v080_field_glossary_is_complete_and_describable():
     from pyextrusion import list_fields, describe_field, FIELD_GLOSSARY
     fields = list_fields()
-    assert len(fields) == 98
-    assert len(FIELD_GLOSSARY) == 98
+    assert len(fields) == 101
+    assert len(FIELD_GLOSSARY) == 101
+    assert {"billet.butt_mass_kg", "billet.butt_equivalent_billet_mm", "billet.mass_coefficient_source"} <= {field.path for field in fields}
     info = describe_field("scrap.total_kg")
     assert info.unit == "kg"
     assert "Total losses" in info.description
@@ -725,7 +731,8 @@ def test_v090_double_profile_losses_use_two_pulls_but_one_butt_and_billet_saw():
     # 8 billets × 2 pulls × 2 m × 0.4 kg/m
     assert r.scrap.front_scrap_kg == pytest.approx(12.8)
     # Butt and billet saw happen once per billet.
-    assert r.scrap.butt_kg == pytest.approx(r.billets * 20 * p.billet_weight_kg_per_mm)
+    butt_mass = p.density_kg_m3 * math.pi * p.container_diameter_mm**2 / 4 * 20 / 1e9
+    assert r.scrap.butt_kg == pytest.approx(r.billets * butt_mass)
     assert r.scrap.billet_saw_kg == pytest.approx(r.billets * p.saws.billet_mm * p.billet_weight_kg_per_mm)
     # Puller saw happens once per pull/profile.
     assert r.scrap.puller_saw_kg == pytest.approx((p.saws.puller_mm / 1000) * 0.4 * r.billets * 2)

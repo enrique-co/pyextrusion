@@ -1,5 +1,13 @@
 # Understand the results
 
+## Butt trace and coefficient source
+
+`billet.butt_mm` is physical thickness in the container. `billet.butt_mass_kg` is the mass of **one** such butt, while `scrap.butt_kg` is the order total. `billet.butt_equivalent_billet_mm` is its equivalent incoming-billet length. `billet.kg_per_mm` and `billet.mass_coefficient_source` identify the effective coefficient (`geometric` or `user_plant_override`).
+
+Quantity-free `ProcessResult` exposes the same per-billet mass and equivalent length, with `billet_mass_coefficient_source`. Engine-generated results populate these fields even for a nonviable case; `None` is reserved for manually constructed legacy result objects without the new trace.
+
+`recommended_billet_length_mm` is an operational `ceil`, not nearest-mm display rounding. Do not round before comparing billet limits. A changed loss-based productivity index is not necessarily a change in physical net kg/h.
+
 PyExtrusion returns many fields because different users need different views. You do not need to read every field for every calculation.
 
 This chapter explains the main result families in practical terms.

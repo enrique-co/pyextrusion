@@ -46,10 +46,12 @@ press = Press(
 ## Manual butt override
 
 ```python
-adjusted = case.with_production(butt_mm=25)
+adjusted = case.with_production(butt_mm=25)  # Physical thickness in the container.
 ```
 
 Without an override, PyExtrusion uses 15 mm for solid/plate and 20 mm for hollow/tubular.
+
+Do not convert these values to incoming-billet length before calling the engine. Inspect `result.billet.butt_mass_kg`, `result.billet.butt_equivalent_billet_mm` and `result.billet.mass_coefficient_source` to trace the conversion. A measured `billet_kg_per_mm_override` affects the incoming-billet equivalent and upstream billet saw, but the physical butt mass still uses the container section and density.
 
 ## Compare presses
 

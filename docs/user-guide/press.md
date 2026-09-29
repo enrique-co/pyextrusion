@@ -77,6 +77,12 @@ press = Press(
 )
 ```
 
+### Incoming-billet mass coefficient
+
+`billet_kg_per_mm_override` remains available for a measured mass per mm of original incoming billet. Without it, the coefficient is `density_kg_m3 * billet_area_m2 / 1000`. Results identify the source as `geometric` or `user_plant_override`.
+
+The override applies to incoming-billet length and billet-saw loss. Butt mass is instead `density_kg_m3 * container_area_m2 * butt_mm / 1000`; its incoming-billet equivalent is obtained by dividing that mass by the effective coefficient. A measured coefficient does not redefine container density. See [Geometry](../technical-reference/geometry.md#physical-butt-and-equivalent-incoming-billet-length) for the geometric upsetting limitation.
+
 ### Defaults versus real values
 
 PyExtrusion can infer several practical defaults from nominal press size when real values are unavailable. These defaults are intended to make preliminary calculations possible; they are **not universal press-design laws**.

@@ -9,6 +9,8 @@
 
 Current release: **0.17.0**.
 
+This checkout prepares **0.18.0 — UNRELEASED / LOCAL CANDIDATE**. It corrects `butt_mm` as physical residual thickness inside the container: butt mass uses the container section, then converts once to incoming-billet equivalent length. Existing physical mm inputs and the measured incoming-billet coefficient override remain supported. Calculated lengths, losses and feasibility may change; see the [changelog](CHANGELOG.md). No release or publication is implied.
+
 PyExtrusion is a deterministic Python toolkit for evaluating aluminium profiles on **direct extrusion presses**. The same calculation engine is available through Python, CLI and JSON workflows.
 
 Version 0.17.0 extends the production/planning engine with a source-traced engineering layer, basic deterministic economics and corrected downstream saw-kerf accounting. The new engineering models keep their scope explicit: the implemented pressure/force result is an **equivalent-axisymmetric baseline**, not a final porthole-die force prediction, and the thermal models are analytical/source-term baselines rather than a production-grade exit-temperature predictor.

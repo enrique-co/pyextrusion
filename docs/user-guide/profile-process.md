@@ -74,8 +74,10 @@ process = Process(
 - front scrap;
 - complexity;
 - optional manual number of cuts;
-- optional butt override;
+- optional butt override (`butt_mm`: physical residual thickness inside the container);
 - optional special multi-billet front scrap.
+
+The butt input and plant butt rules retain physical mm values. Defaults remain 15 mm for solid/plate and 20 mm for hollow/tubular. No numeric input migration is required. The engine converts butt mass to an equivalent incoming-billet length internally, once. The v0.18.0 correction can change calculated lengths, losses and discrete feasibility compared with earlier calculations, which used the incoming-billet section for the butt.
 
 ### Important process ranges
 

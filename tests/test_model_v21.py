@@ -68,9 +68,10 @@ def test_v21_billet_first_does_not_shorten_billet_to_fit_more_billets():
     # With this profile, one-profile optimization selects 2 cuts and a billet
     # near the press maximum. Reducing to 1 cut would allow more billets on
     # the table, but billet-first explicitly forbids that optimization direction.
+    p = press8()
     r = calculate_simple(
-        press8(),
-        linear_weight_kg_m=4.8,
+        p,
+        linear_weight_kg_m=4.79,
         exits=1,
         profile_type="solid",
         exit_speed_m_min=15,
@@ -90,8 +91,29 @@ def test_v21_billet_first_does_not_shorten_billet_to_fit_more_billets():
     cut_m = 9.8
     short_segment = cut_m + 2.0
     assert math.floor(54 / short_segment) == 4
-    short_billet = (4.8 * short_segment) / r.billet.kg_per_mm + r.butt_mm
+    butt_mass = p.density_kg_m3 * math.pi * p.container_diameter_mm**2 / 4 * r.butt_mm / 1e9
+    short_physical = short_segment + p.saws.final_mm / 1000 + (p.saws.puller_mm + p.saws.final_mm) / 4000
+    short_billet = (4.79 * short_physical + butt_mass) / r.billet.kg_per_mm
     assert short_billet < one.billet_length_mm
+
+
+def test_physical_butt_crosses_old_two_cut_boundary_without_rounding():
+    p = press8()
+    inputs = dict(linear_weight_kg_m=4.8, exits=1, profile_type="solid",
+                  exit_speed_m_min=15, cut_length_mm=9800, bars_requested=100, front_scrap_m=2)
+    automatic = calculate_simple(p, **inputs)
+    candidate = calculate_simple(p, **inputs, cuts=2)
+    one = next(c for c in candidate.configurations if c.profiles_per_billet == 1)
+    cb = p.density_kg_m3 * math.pi * p.billet_diameter_mm**2 / 4 / 1e9
+    mb = p.density_kg_m3 * math.pi * p.container_diameter_mm**2 / 4 * candidate.butt_mm / 1e9
+    useful = 4.8 * one.length_per_billet_m / cb
+    assert useful + candidate.butt_mm < 1200  # Superseded v0.17.0 premise.
+    assert useful + mb / cb > 1200
+    assert one.billet_length_mm == pytest.approx(useful + mb / cb, rel=2e-12)
+    assert not one.valid and "billet above maximum" in one.reasons
+    selected_one = next(c for c in automatic.configurations if c.profiles_per_billet == 1)
+    assert selected_one.cuts == 1
+    assert selected_one.billets_per_pull == 4
 
 
 def test_v21_multi_billet_front_scrap_reoptimizes_billet_before_k():
@@ -126,7 +148,8 @@ def test_v21_multi_billet_front_scrap_reoptimizes_billet_before_k():
     expected_useful = 4.0 * expected_physical_per_billet / 0.087
     assert cfg.length_per_billet_m == pytest.approx(expected_physical_per_billet)
     assert cfg.billet_useful_length_mm == pytest.approx(expected_useful)
-    assert cfg.billet_length_mm == pytest.approx(expected_useful + base.butt_mm)
+    butt_mass = p.density_kg_m3 * math.pi * p.container_diameter_mm**2 / 4 * base.butt_mm / 1e9
+    assert cfg.billet_length_mm == pytest.approx(expected_useful + butt_mass / 0.087)
     assert base.process.applied_front_scrap_source == "multi_billet_user_override"
 
 

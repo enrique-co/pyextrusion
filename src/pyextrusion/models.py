@@ -103,7 +103,7 @@ class SawSpec:
 
 @dataclass(frozen=True)
 class ButtRule:
-    """Legacy/custom plant rule for butt-discard length.
+    """Legacy/custom plant rule for physical residual thickness in the container.
 
     PyExtrusion v2.4 no longer requires butt rules: when none are supplied,
     the default is 15 mm for solid/plate and 20 mm for hollow/tubular.
@@ -396,9 +396,18 @@ class PressSpec:
 
     @property
     def billet_weight_kg_per_mm(self) -> float:
+        """Mass per mm of incoming billet, never the container-section butt.
+
+        A user/plant override replaces only this incoming-billet coefficient.
+        Physical butt mass still uses density and the container bore area.
+        """
         if self.billet_kg_per_mm_override is not None:
             return self.billet_kg_per_mm_override
         return self.billet_area_m2 * self.density_kg_m3 / 1000.0
+
+    @property
+    def billet_mass_coefficient_source(self) -> str:
+        return "user_plant_override" if self.billet_kg_per_mm_override is not None else "geometric"
 
     @property
     def nominal_size_source(self) -> str:
@@ -428,7 +437,7 @@ class PressSpec:
         return DEFAULT_BUTT_MM[canonical], "default_rule"
 
     def butt_mm_for(self, profile_type: ProfileType, kg_m_total: float) -> float:
-        """Compatibility helper returning only the resolved butt length."""
+        """Compatibility helper returning physical residual container thickness."""
         return self.resolve_butt_mm(profile_type, kg_m_total)[0]
 
     def to_dict(self) -> dict[str, Any]:
@@ -472,7 +481,11 @@ class ProfileSpec:
 
 @dataclass(frozen=True)
 class ProcessSpec:
-    """Quantity-free process conditions for planning and process evaluation."""
+    """Quantity-free process conditions for planning and process evaluation.
+
+    ``butt_mm`` is physical residual thickness inside the container, not an
+    equivalent length of the incoming billet. None selects the physical default.
+    """
 
     exit_speed_m_min: float | None
     cut_length_mm: float
@@ -579,7 +592,11 @@ class PlanningCase:
 
 @dataclass(frozen=True)
 class ProductionSpec:
-    """Production inputs independent from a particular press."""
+    """Production inputs independent from a particular press.
+
+    ``butt_mm`` is physical residual thickness inside the container. Callers
+    must not pre-convert it to an incoming-billet equivalent length.
+    """
 
     exit_speed_m_min: float | None
     cut_length_mm: float
@@ -831,6 +848,9 @@ class ProcessResult:
     extrusion_time_per_billet_min: float
     dead_time_sec: float
     warnings: tuple[str, ...] = ()
+    butt_mass_kg: float | None = None
+    butt_equivalent_billet_mm: float | None = None
+    billet_mass_coefficient_source: str | None = None
 
     @property
     def first_billet_time_min(self) -> float:
@@ -904,6 +924,11 @@ class BilletResult(_ResultBlock):
     butt_mm: float
     butt_source: str
     kg_per_mm: float
+    # Defaults preserve manual construction of older result objects. Engine
+    # results always populate all three trace fields, including nonviable cases.
+    butt_mass_kg: float | None = None
+    butt_equivalent_billet_mm: float | None = None
+    mass_coefficient_source: str | None = None
 
 
 @dataclass(frozen=True)

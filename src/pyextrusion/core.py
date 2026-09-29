@@ -49,6 +49,8 @@ class _ResolvedProcess:
     warnings: tuple[str, ...]
     butt_mm: float
     butt_source: str
+    butt_mass_kg: float
+    butt_equivalent_billet_mm: float
     configurations: tuple[ConfigurationResult, ...]
     valid_configurations: tuple[ConfigurationResult, ...]
     selected: ConfigurationResult | None
@@ -233,14 +235,27 @@ def _resolve_exit_and_ram_speed(data: StudyInput, extrusion_ratio_value: float, 
     return exit_speed, ram_m_min, ram_mm_s, "ram_speed_user_value"
 
 
+def _butt_geometry(
+    density_kg_m3: float,
+    container_area_m2: float,
+    physical_butt_mm: float,
+    billet_kg_per_mm: float,
+) -> tuple[float, float]:
+    """One physical container-section butt: mass and incoming-billet equivalent."""
+    mass_kg = density_kg_m3 * container_area_m2 * (physical_butt_mm / 1000.0)
+    equivalent_mm = mass_kg / billet_kg_per_mm
+    _assert_finite_result((mass_kg, equivalent_mm), "butt geometry")
+    return mass_kg, equivalent_mm
+
+
 def _billet_lengths(
     kg_m_total: float,
     length_m: float,
     kg_per_mm: float,
-    butt_mm: float,
+    butt_equivalent_billet_mm: float,
 ) -> tuple[float, float]:
     useful = (kg_m_total * length_m) / kg_per_mm
-    return useful, useful + butt_mm
+    return useful, useful + butt_equivalent_billet_mm
 
 
 def _configuration(
@@ -376,6 +391,10 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
     else:
         butt_mm, butt_source = p.resolve_butt_mm(prof.profile_type, kg_m_total)
 
+    butt_mass_kg, butt_equivalent_billet_mm = _butt_geometry(
+        p.density_kg_m3, p.container_area_m2, butt_mm, p.billet_weight_kg_per_mm
+    )
+
     fixed_by_user = data.cuts is not None
     puller_kerf_m = p.saws.puller_mm / 1000.0
     final_kerf_m = p.saws.final_mm / 1000.0
@@ -402,7 +421,7 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
                     kg_m_total,
                     physical_per_billet_m,
                     p.billet_weight_kg_per_mm,
-                    butt_mm,
+                    butt_equivalent_billet_mm,
                 )
                 if n >= 1 and k >= 1 else (0.0, 0.0)
             )
@@ -505,7 +524,7 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
                     kg_m_total,
                     total_extruded_m,
                     p.billet_weight_kg_per_mm,
-                    butt_mm,
+                    butt_equivalent_billet_mm,
                 )
                 if n >= 1 else (0.0, 0.0)
             )
@@ -586,12 +605,12 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
             min_profiles = max(
                 3,
                 math.ceil(
-                    max(0.0, p.billet_min_length_mm - butt_mm)
+                    max(0.0, p.billet_min_length_mm - butt_equivalent_billet_mm)
                     / useful_per_profile_mm
                 ),
             )
             max_profiles = math.floor(
-                max(0.0, p.billet_max_length_mm - butt_mm)
+                max(0.0, p.billet_max_length_mm - butt_equivalent_billet_mm)
                 / useful_per_profile_mm
             )
             if min_profiles <= max_profiles:
@@ -679,6 +698,8 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         warnings=tuple(warnings),
         butt_mm=butt_mm,
         butt_source=butt_source,
+        butt_mass_kg=butt_mass_kg,
+        butt_equivalent_billet_mm=butt_equivalent_billet_mm,
         configurations=configurations,
         valid_configurations=valid,
         selected=selected,
@@ -749,6 +770,9 @@ def calculate_process(data: ProcessInput) -> ProcessResult:
         billet_length_mm=selected.billet_length_mm if selected else 0.0,
         recommended_billet_length_mm=r.recommended_billet_length_mm,
         billet_kg_per_mm=r.press.billet_weight_kg_per_mm,
+        butt_mass_kg=r.butt_mass_kg,
+        butt_equivalent_billet_mm=r.butt_equivalent_billet_mm,
+        billet_mass_coefficient_source=r.press.billet_mass_coefficient_source,
         applied_front_scrap_m=r.applied_front_scrap_m,
         applied_front_scrap_source=r.applied_front_scrap_source,
         cuts_source=r.cuts_source,
@@ -830,7 +854,7 @@ def calculate(data: StudyInput) -> CalculationResult:
 
     kg_start = (5.0 if prof.exits == 1 else 5.0 + 5.0 * prof.exits) * kg_m_total
     kg_complexity = COMPLEXITY_PCT[data.complexity] * good_made
-    kg_butt = billets * butt_mm * p.billet_weight_kg_per_mm
+    kg_butt = billets * r.butt_mass_kg
     kg_front = selected_front_scrap * kg_m_total * billets * profiles_per_billet
     swarf_billet = billets * p.saws.billet_mm * p.billet_weight_kg_per_mm
     swarf_puller = (p.saws.puller_mm / 1000.0) * kg_m_total * n_pulls
@@ -988,6 +1012,9 @@ def calculate(data: StudyInput) -> CalculationResult:
         butt_mm=butt_mm,
         butt_source=butt_source,
         kg_per_mm=p.billet_weight_kg_per_mm,
+        butt_mass_kg=r.butt_mass_kg,
+        butt_equivalent_billet_mm=r.butt_equivalent_billet_mm,
+        mass_coefficient_source=p.billet_mass_coefficient_source,
     )
     production_block = ProductionResult(
         profiles_per_billet=profiles_per_billet,
