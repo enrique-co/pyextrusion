@@ -4,7 +4,6 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyextrusion"
-# UNRELEASED / RELEASE CANDIDATE; publication requires separate authorization.
 version = "0.18.0"
 description = "Engineering calculation toolkit for aluminium extrusion"
 readme = "README.md"
