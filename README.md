@@ -8,9 +8,9 @@
 
 **Engineering calculation toolkit for aluminium extrusion**
 
-Candidate version: **0.18.0 — UNRELEASED / RELEASE CANDIDATE**.
+Current release: **0.18.0**.
 
-This checkout corrects `butt_mm` as physical residual thickness inside the container: butt mass uses the container section, then converts once to incoming-billet equivalent length. Existing physical mm inputs and the measured incoming-billet coefficient override remain supported. Calculated lengths, losses and feasibility may change; see the [changelog](CHANGELOG.md). Publication is pending; the PyPI badge reports the published package, not this candidate.
+Version 0.18.0 corrects `butt_mm` as physical residual thickness inside the container: butt mass uses the container section, then converts once to incoming-billet equivalent length. Existing physical mm inputs and the measured incoming-billet coefficient override remain supported. Calculated lengths, losses and feasibility may differ from 0.17.0; see the [changelog](CHANGELOG.md).
 
 PyExtrusion is a deterministic Python toolkit for evaluating aluminium profiles on **direct extrusion presses**. The same calculation engine is available through Python, CLI and JSON workflows.
 
@@ -38,8 +38,6 @@ PyExtrusion includes a source-traced engineering layer, basic deterministic econ
 ## Installation
 
 From PyPI:
-
-This installs the currently published package. Until 0.18.0 is published, validate this candidate using its local source or wheel instead.
 
 ```bash
 python -m pip install pyextrusion
