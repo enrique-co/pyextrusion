@@ -153,10 +153,10 @@ p_{steady}
 \]
 
 \[
-F = p_{peak} A_C
+F_{baseline} = p_{peak} A_C
 \]
 
-### Stuwe surface exit-temperature estimate
+### Stüwe surface exit-temperature estimate
 
 \[
 T_{exit,surface}
@@ -242,3 +242,14 @@ This relation predicts an interface temperature under its stated conduction assu
 ### Force interpretation
 
 The pressure/force result above is deliberately named \(F_{baseline}\). It is an equivalent-axisymmetric mechanical screening result. It does not include shaped-profile or bridge/porthole-die pressure corrections and must not be presented as the final force requirement of a real porthole die.
+
+When the baseline is compared with a configured scalar press limit, the
+arithmetic difference is:
+
+\[
+F_{reserve}=F_{press}-F_{baseline}
+\]
+
+\(F_{reserve}\) is a screening indicator only. It is not guaranteed remaining
+capacity, a safety margin, force available for a porthole die or a prediction
+of the real die load.

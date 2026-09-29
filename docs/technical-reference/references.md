@@ -14,7 +14,7 @@ to:
 **T. Sheppard, _Extrusion of Aluminium Alloys_ (1999).**
 
 PyExtrusion uses Sheppard's AA6063 hot-working constants, modified Feltham
-strain-rate context, axisymmetric pressure correlations, the Stuwe
+strain-rate context, axisymmetric pressure correlations, the Stüwe
 surface-temperature approximation reproduced by Sheppard, and the Eq. 2.25
 billet/tooling interface-temperature relation.
 
@@ -41,6 +41,22 @@ Relevant topics include:
 
 The literature also makes clear that extrusion behaviour depends on a broader set of variables — including alloy, temperature, friction, extrusion ratio, billet length, die design and speed — than those currently represented by the PyExtrusion production model.
 
+## Public alloy aliases and provenance
+
+Normal examples use `from pyextrusion.engineering import AA6060, AA6063`.
+The source-specific names remain public for backward compatibility and scientific
+provenance:
+
+| Public alias | Source-specific name | Source |
+|---|---|---|
+| `AA6060` | `AA6060_VERLINDEN_1993` | Verlinden, Suhadi and Delaey (1993) |
+| `AA6063` | `AA6063_SHEPPARD_1999` | Sheppard (1999) |
+
+Each alias is the very same model object as its source-specific name, not a copy
+or a new dataset. Model parameters, metadata, provenance and numerical results
+are unchanged. These aliases do not introduce an alloy registry or imply support
+for other alloys.
+
 PyExtrusion-specific defaults, supported software ranges and composite interpretation indicators are engineering choices of the project and should not be presented as universal industry laws.
 
 ---
@@ -62,6 +78,7 @@ Use the **PyExtrusion User Guide** when you want to learn how to:
 
 Use this **Technical Reference** when you want to understand the public engineering meaning of the calculations.
 
-Internal model-governance and implementation specifications are not part of the public documentation.
+Use the dedicated [Engineering section](../engineering/index.md) for the public
+scope, interpretation and limitations of these analytical models.
 
 ---

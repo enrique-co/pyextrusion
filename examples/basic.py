@@ -1,4 +1,4 @@
-"""Minimal PyExtrusion 0.16.0 / calculation-model v2.4 example."""
+"""Minimal PyExtrusion 0.18.0 production-calculation example."""
 from pyextrusion import Press, calculate_simple
 
 # Only the nominal press size and run-out table are supplied here.

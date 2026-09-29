@@ -1,4 +1,4 @@
-"""Quantity-free process evaluation and operational planning with PyExtrusion 0.16.0."""
+"""Quantity-free process evaluation and operational planning with PyExtrusion 0.18.0."""
 from pyextrusion import (
     PlanningCase,
     PlanningRequest,

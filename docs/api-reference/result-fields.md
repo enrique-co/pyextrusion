@@ -1,6 +1,6 @@
 # Result field glossary
 
-The PyExtrusion 0.18.0 local candidate exposes the following documented structured result fields. Use the exact dotted paths with `result.value()`, `result.select()`, or the CLI field commands. The three new butt/coefficient trace fields are always populated by the engine; `None` preserves manual construction of legacy result objects.
+The PyExtrusion 0.18.0 release candidate exposes the following documented structured production result fields. Use the exact dotted paths with `result.value()`, `result.select()`, or the CLI field commands. The three new butt/coefficient trace fields are always populated by the engine; `None` preserves manual construction of legacy result objects. Engineering and Economics use their own result objects, documented in their API reference pages.
 
 | Field | Unit | Type | Description |
 |---|---|---|---|

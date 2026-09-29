@@ -48,6 +48,11 @@ nav:
       - Troubleshooting: user-guide/troubleshooting.md
       - Model boundaries: user-guide/model-boundaries.md
       - Glossary: user-guide/glossary.md
+  - Engineering:
+      - Overview: engineering/index.md
+      - Materials & rheology: engineering/materials-rheology.md
+      - Mechanical baseline: engineering/mechanical-baseline.md
+      - Thermal boundaries: engineering/thermal-boundaries.md
   - Technical Reference:
       - Overview: technical-reference/index.md
       - Scope & units: technical-reference/scope-units.md
@@ -61,6 +66,8 @@ nav:
   - API Reference:
       - Overview: api-reference/index.md
       - Python API: api-reference/python-api.md
+      - Engineering API: api-reference/engineering.md
+      - Economics API: api-reference/economics.md
       - JSON: api-reference/json.md
       - CLI: api-reference/cli.md
       - Result fields: api-reference/result-fields.md
@@ -80,6 +87,7 @@ markdown_extensions:
   - admonition
   - attr_list
   - def_list
+  - md_in_html
   - tables
   - toc:
       permalink: true

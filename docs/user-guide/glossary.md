@@ -86,6 +86,17 @@ A ratio describing the reduction from the incoming container cross-section to th
 
 A PyExtrusion summary group containing fixed process losses such as butt, front scrap and saw-related losses.
 
+### F_baseline
+
+Equivalent-axisymmetric mechanical force baseline calculated from peak pressure
+and container-bore area. It is not the final load prediction for a real shaped,
+bridge or porthole die.
+
+### F_reserve
+
+Arithmetic screening difference `F_press - F_baseline`. It is not guaranteed
+remaining capacity, a safety margin or force available for a porthole die.
+
 ### Front scrap / front crop
 
 Length intentionally lost at the front/start of a pull or billet contribution before usable finished bars are considered.

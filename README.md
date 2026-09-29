@@ -2,33 +2,44 @@
 
 [![CI](https://github.com/enrique-co/pyextrusion/actions/workflows/ci.yml/badge.svg)](https://github.com/enrique-co/pyextrusion/actions/workflows/ci.yml)
 [![Documentation](https://github.com/enrique-co/pyextrusion/actions/workflows/docs.yml/badge.svg)](https://github.com/enrique-co/pyextrusion/actions/workflows/docs.yml)
+[![PyPI](https://img.shields.io/pypi/v/pyextrusion.svg)](https://pypi.org/project/pyextrusion/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
 
 **Engineering calculation toolkit for aluminium extrusion**
 
-Current release: **0.17.0**.
+Candidate version: **0.18.0 — UNRELEASED / RELEASE CANDIDATE**.
 
-This checkout prepares **0.18.0 — UNRELEASED / LOCAL CANDIDATE**. It corrects `butt_mm` as physical residual thickness inside the container: butt mass uses the container section, then converts once to incoming-billet equivalent length. Existing physical mm inputs and the measured incoming-billet coefficient override remain supported. Calculated lengths, losses and feasibility may change; see the [changelog](CHANGELOG.md). No release or publication is implied.
+This checkout corrects `butt_mm` as physical residual thickness inside the container: butt mass uses the container section, then converts once to incoming-billet equivalent length. Existing physical mm inputs and the measured incoming-billet coefficient override remain supported. Calculated lengths, losses and feasibility may change; see the [changelog](CHANGELOG.md). Publication is pending; the PyPI badge reports the published package, not this candidate.
 
 PyExtrusion is a deterministic Python toolkit for evaluating aluminium profiles on **direct extrusion presses**. The same calculation engine is available through Python, CLI and JSON workflows.
 
-Version 0.17.0 extends the production/planning engine with a source-traced engineering layer, basic deterministic economics and corrected downstream saw-kerf accounting. The new engineering models keep their scope explicit: the implemented pressure/force result is an **equivalent-axisymmetric baseline**, not a final porthole-die force prediction, and the thermal models are analytical/source-term baselines rather than a production-grade exit-temperature predictor.
+PyExtrusion includes a source-traced engineering layer, basic deterministic economics and physical downstream saw-kerf accounting. The engineering models keep their scope explicit: the implemented pressure/force result is an **equivalent-axisymmetric baseline**, not a final porthole-die force prediction, and the thermal models are analytical/source-term baselines rather than a production-grade exit-temperature predictor.
 
-## What changed in 0.17.0
+## Three working areas
 
-- Adds `pyextrusion.engineering` foundations for press engineering metadata, force-limit checks, hydraulic/power/energy identities and source traceability.
-- Adds source-traced AA6063 and AA6060 hot-working constitutive models.
-- Adds modified Feltham mean strain rate, Zener-Hollomon and steady-state flow stress.
-- Adds Sheppard axisymmetric pressure, billet-container friction, breakthrough and equivalent-axisymmetric force baseline calculations.
-- Adds a limited Stuwe surface-temperature estimate, Saha local thermal source terms and Sheppard Eq. 2.25 interface temperature while keeping their thermal limitations explicit.
-- Adds basic deterministic production economics, including recurring production cost, tooling/development cost and sales-margin calculations.
-- Corrects downstream puller/final-saw kerfs so they reserve physical extruded length in billet sizing, table occupancy and technical time.
+- **Production & Planning** — billet sizing, extrusion geometry, productivity,
+  multi-billet processes, operational planning, sequences and multi-press
+  comparison.
+- **Engineering** — AA6063/AA6060 constitutive models, modified Feltham mean
+  strain rate, Zener-Hollomon, flow stress, equivalent-axisymmetric mechanical
+  baselines and bounded thermal tools.
+- **Economics** — recurring production cost, material/scrap economics,
+  tooling/development cost and sales-margin calculations.
+
+## What changed in 0.18.0
+
+- Corrects physical butt mass and equivalent incoming-billet length without changing the physical input values or redefining upsetting.
+- Adds `AA6060` and `AA6063` as identical-object aliases of the existing source-traced constitutive models, preserving scientific names and provenance.
+- Integrates the public Engineering section and separate Engineering/Economics API examples into the documentation.
+- Retains the existing pressure, rheology, thermal and economics equations; no new alloy dataset or registry is introduced.
 - Keeps shaped-section, bridge/porthole pressure corrections, complete transient thermal reconstruction and production-grade exit-temperature prediction outside the current model.
 
 ## Installation
 
 From PyPI:
+
+This installs the currently published package. Until 0.18.0 is published, validate this candidate using its local source or wheel instead.
 
 ```bash
 python -m pip install pyextrusion
@@ -37,7 +48,7 @@ python -m pip install pyextrusion
 From a local release wheel:
 
 ```bash
-python -m pip install pyextrusion-0.17.0-py3-none-any.whl
+python -m pip install pyextrusion-0.18.0-py3-none-any.whl
 ```
 
 ## Quick calculation
@@ -182,7 +193,12 @@ Publicly documented calculations include:
 
 ## Model boundary
 
-PyExtrusion 0.17.0 models **direct aluminium extrusion**. It does not perform full industrial scheduling or complete extrusion-force, thermal, metallurgical, die-life or plant-resource prediction.
+PyExtrusion 0.18.0 models **direct aluminium extrusion**. It does not perform full industrial scheduling or complete extrusion-force, thermal, metallurgical, die-life or plant-resource prediction.
+
+The mechanical result is `F_baseline`, an equivalent-axisymmetric baseline. A
+comparison `F_reserve = F_press - F_baseline` is only a screening indicator; it is not
+guaranteed remaining capacity, a safety margin, force available for a porthole
+die or a prediction of the real die load.
 
 The productivity index is orientative. It is not a physical quantity and must not be used alone as the final industrial selection criterion.
 
@@ -191,8 +207,9 @@ The productivity index is orientative. It is not a physical quantity and must no
 The public documentation is organised into:
 
 - **User Guide** — task-oriented usage;
+- **Engineering** — public analytical models and explicit interpretation limits;
 - **Technical Reference** — selected engineering basis and formulas;
-- **API Reference** — Python, JSON, CLI, result fields and errors;
+- **API Reference** — production, Engineering, Economics, JSON, CLI, result fields and errors;
 - **Examples** — practical workflows;
 - **About** — project, citation, licence and changelog.
 
