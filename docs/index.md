@@ -5,15 +5,12 @@
 PyExtrusion 0.18.0 brings production planning, bounded analytical engineering
 models and deterministic production economics together in one Python package.
 
-!!! info "0.18.0 release candidate — publication pending"
+!!! info "PyExtrusion 0.18.0 is available on PyPI"
     ```bash
     pip install pyextrusion
     ```
 
-    This command installs the published package, not necessarily this candidate.
-    To validate **0.18.0** before publication, use the candidate source or local wheel.
-    See the
-    [PyPI project page](https://pypi.org/project/pyextrusion/) or
+    See the [PyPI project page](https://pypi.org/project/pyextrusion/) or
     [source repository](https://github.com/enrique-co/pyextrusion).
 
 ## Three working areas

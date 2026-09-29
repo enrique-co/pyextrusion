@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.18.0 — UNRELEASED / RELEASE CANDIDATE
+## 0.18.0
 
 - Corrects physical butt semantics: `butt_mm` remains residual thickness inside the container; butt mass uses density and container area, then converts once to equivalent incoming-billet length.
 - Preserves measured `billet_kg_per_mm_override` for original-billet mass/length and billet-saw loss. It does not replace the container-section butt mass coefficient.
@@ -13,7 +13,6 @@
 - Adds public `AA6060` and `AA6063` aliases of the existing source-specific model objects; preserves both scientific names, datasets and provenance without a registry or additional alloys.
 - Integrates the new home page, Engineering section and Engineering/Economics API references for 0.18.0; updates physical-butt documentation and normal alloy examples.
 - Restricts automatic Pages deployment to `main`, with main-only guards for both build and deploy jobs.
-- Release candidate prepared for review: publication date remains pending. No tag, GitHub Release, PyPI publication or Pages deployment is authorized by this candidate preparation.
 
 ## 0.17.0
 
