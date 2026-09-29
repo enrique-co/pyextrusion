@@ -4,7 +4,7 @@ Understanding what a tool does **not** calculate is as important as understandin
 
 ### Current process scope
 
-PyExtrusion 0.17.0 is intended for **direct aluminium extrusion**.
+PyExtrusion 0.18.0 is intended for **direct aluminium extrusion**.
 
 ### Current supported production geometry
 
@@ -16,20 +16,28 @@ The current model supports:
 
 A scenario requiring three or more complete sequential profiles/pulls from one billet is outside the current supported model.
 
-### Not currently modeled
+### Engineering scope and exclusions
 
-PyExtrusion includes selected analytical estimates for AA6063 direct extrusion:
+PyExtrusion includes separate source-traced AA6063 and AA6060 constitutive
+models. The composed single-operation estimate and the following mechanical and
+thermal relationships are currently scoped to AA6063 direct extrusion:
 
 - equivalent axisymmetric geometry;
 - modified Feltham mean strain rate;
 - Zener-Hollomon / Sheppard-Wright flow stress;
 - Sheppard axisymmetric pressure, container friction, breakthrough pressure and equivalent-axisymmetric force baseline;
-- Stuwe three-component surface exit-temperature estimate;
+- Stüwe three-component surface exit-temperature estimate;
 - Saha local thermal source terms for deformation, billet-container friction, dead-metal-zone friction and die-bearing friction;
 - Sheppard Eq. 2.25 billet/container interface-temperature relation using source-stated aluminium and Cr-V tooling-steel thermal properties.
 
 These estimates are scoped to a single operation point and keep their units,
 source traceability and limitations explicit.
+
+The mechanical force result is \(F_{baseline}\), an equivalent-axisymmetric
+baseline. If it is compared with a configured press scalar,
+\(F_{reserve}=F_{press}-F_{baseline}\) is a screening indicator only. It is not
+guaranteed remaining capacity, a safety margin, force available for a porthole
+die or a prediction of the real die load.
 
 PyExtrusion does not currently provide a complete model for:
 
@@ -38,6 +46,8 @@ PyExtrusion does not currently provide a complete model for:
 - Integral Profile thermal reconstruction;
 - transient thermal evolution through billet, container, die and tooling;
 - reconstruction of Saha's complete finite-difference temperature field and its omitted boundary conditions;
+- invention or completion of missing thermal boundary conditions;
+- production-grade exit-temperature prediction;
 - conversion of Saha local heat-source terms into an exit-temperature prediction without an explicit transient heat-balance model;
 - source-exact partition of newly generated friction heat between aluminium and tooling; Eq. 2.25 predicts interface temperature from the two body temperatures and properties but does not itself define friction-heat partition;
 - metallurgical quality prediction;

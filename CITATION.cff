@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "UNRELEASED / LOCAL CANDIDATE. This metadata prepares v0.18.0; do not cite it as a published release."
+message: "UNRELEASED / RELEASE CANDIDATE. Cite the actual candidate commit until v0.18.0 publication is authorized; no release date is assigned."
 title: "PyExtrusion"
 type: software
 authors:

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.18.0 — UNRELEASED / LOCAL CANDIDATE
+## 0.18.0 — UNRELEASED / RELEASE CANDIDATE
 
 - Corrects physical butt semantics: `butt_mm` remains residual thickness inside the container; butt mass uses density and container area, then converts once to equivalent incoming-billet length.
 - Preserves measured `billet_kg_per_mm_override` for original-billet mass/length and billet-saw loss. It does not replace the container-section butt mass coefficient.
@@ -10,7 +10,10 @@
 - Adds independent physical-equation tests, partial-pull and sequential-pull coverage, strict geometric boundaries, override/rounding cases and propagation checks. Reframes the old two-cut boundary separately from billet-first selection policy.
 - Documents that observable lengths, losses, scores and discrete feasibility can differ from v0.17.0. This pre-1.0 physical correction is not a silent replacement of historical results.
 - Preserves equivalent-axisymmetric mechanical screening scope and limited thermal baselines. No new porthole correction, exit-temperature predictor or annual-economic workflow is introduced.
-- Local candidate only: no tag, release, remote push, PyPI publication or website deployment.
+- Adds public `AA6060` and `AA6063` aliases of the existing source-specific model objects; preserves both scientific names, datasets and provenance without a registry or additional alloys.
+- Integrates the new home page, Engineering section and Engineering/Economics API references for 0.18.0; updates physical-butt documentation and normal alloy examples.
+- Restricts automatic Pages deployment to `main`, with main-only guards for both build and deploy jobs.
+- Release candidate prepared for review: publication date remains pending. No tag, GitHub Release, PyPI publication or Pages deployment is authorized by this candidate preparation.
 
 ## 0.17.0
 
@@ -23,7 +26,7 @@
 - Adds Sheppard axisymmetric pressure correlations: deformation pressure, billet-container friction, breakthrough increment, peak pressure and equivalent-axisymmetric required-force baseline.
 - Keeps the pressure/force model explicitly scoped to equivalent-axisymmetric direct extrusion; shaped-section, bridge-die and porthole-die corrections are not inferred or approximated with hidden multipliers.
 - Adds an AA6063 single-operation thermomechanical composition that keeps mechanical and thermal model boundaries visible.
-- Adds the Sheppard/Stuwe three-component surface-temperature estimate as a limited analytical baseline, not as a production-grade exit-temperature predictor.
+- Adds the Sheppard/Stüwe three-component surface-temperature estimate as a limited analytical baseline, not as a production-grade exit-temperature predictor.
 - Adds source-traced Saha local thermal source terms for deformation, billet-container friction, dead-metal-zone friction and die-bearing friction.
 - Keeps Saha's documented 45 degree semi-dead-metal-zone assumption isolated from the Sheppard/Feltham geometry model.
 - Adds complete-sticking die-bearing shear/heat-flux helpers without claiming a transient temperature field or exit-temperature solution.
@@ -31,7 +34,6 @@
 - Explicitly avoids interpreting Eq. 2.25 as a source-exact friction-heat partition model.
 - Keeps Saha's omitted boundary conditions, Integral Profile reconstruction, transient tooling heat storage and production-grade exit-temperature prediction outside the implemented scope.
 - Adds regression coverage across Python 3.10-3.13 for the new engineering and thermomechanical calculations.
-- Keeps the internal PyExtrusion calculation manual private and outside the package, public documentation and website.
 
 
 ## 0.16.0

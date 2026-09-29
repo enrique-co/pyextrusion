@@ -1,6 +1,8 @@
 # User Guide
 
-Use this guide to learn PyExtrusion from a practical, task-oriented point of view.
+Use this guide to learn PyExtrusion 0.18.0 from a practical, task-oriented
+point of view. The package now covers three related areas: production and
+planning, bounded analytical engineering tools, and deterministic economics.
 
 ## What PyExtrusion can do
 
@@ -16,6 +18,11 @@ PyExtrusion can help you:
 - calculate what can be produced in a fixed press-time window;
 - calculate a user-supplied list of production orders in sequence;
 - compare the same process, planning request or production sequence across two or more presses;
+- evaluate source-traced AA6063 and AA6060 constitutive models;
+- calculate equivalent-axisymmetric mechanical baselines and bounded thermal
+  analytical results;
+- calculate recurring production cost, material/scrap economics,
+  tooling/development cost and sales margins;
 - work from Python, the command line or JSON.
 
 ## What PyExtrusion does not do
@@ -34,13 +41,16 @@ PyExtrusion does **not** currently model the full reality of an extrusion plant.
 - automatic order priorities;
 - automatic order reordering;
 - automatic work allocation between presses;
-- complete extrusion-force or thermal-process prediction.
+- final shaped-section, bridge-die or porthole-die force prediction;
+- production-grade exit-temperature prediction.
 
 When PyExtrusion calculates a production sequence, the returned time is **continuous technical press time only**. It does not invent time between orders.
 
-## Recommended learning path
+## Recommended learning paths
 
-If this is your first time using PyExtrusion, follow the guide in this order:
+Start with installation, then follow the path that matches your task.
+
+### Production & Planning
 
 1. [Installation and first steps](getting-started.md)
 2. [Define a press](press.md)
@@ -50,13 +60,23 @@ If this is your first time using PyExtrusion, follow the guide in this order:
 6. [Calculate a sequence of orders](production-sequences.md)
 7. [Compare presses](compare-presses.md)
 8. [Understand the results](understand-results.md)
-9. [Use JSON and the CLI](json-cli.md)
-10. [Errors and troubleshooting](troubleshooting.md)
-11. [Model boundaries](model-boundaries.md)
-12. [Glossary](glossary.md)
 
-!!! note "Public documentation"
-    This User Guide intentionally documents **how to use and interpret PyExtrusion**. Internal calculation specifications, implementation rules and unpublished engineering documentation are not part of the public guide.
+### Engineering
+
+1. [Engineering overview](../engineering/index.md)
+2. [Materials and rheology](../engineering/materials-rheology.md)
+3. [Mechanical baseline](../engineering/mechanical-baseline.md)
+4. [Thermal boundaries](../engineering/thermal-boundaries.md)
+5. [Engineering API](../api-reference/engineering.md)
+
+### Economics
+
+1. [Basic economics](basic-economics.md)
+2. [Economics API](../api-reference/economics.md)
+
+For every path, also review [JSON and the CLI](json-cli.md),
+[troubleshooting](troubleshooting.md), [model boundaries](model-boundaries.md)
+and the [glossary](glossary.md) as needed.
 
 
 ---

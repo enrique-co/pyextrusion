@@ -109,7 +109,14 @@ from .rheology import (
     zener_hollomon_parameter_s_1,
 )
 
+# Short public names share the exact source-traced model objects. Keep the
+# author/year names available for reproducibility and backward compatibility.
+AA6060 = AA6060_VERLINDEN_1993
+AA6063 = AA6063_SHEPPARD_1999
+
 __all__ = [
+    "AA6060",
+    "AA6063",
     "AA6060_VERLINDEN_1993",
     "AA6063_SHEPPARD_1999",
     "AA6063_DIRECT_OPERATION_LIMITATIONS",

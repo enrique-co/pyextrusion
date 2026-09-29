@@ -20,7 +20,12 @@ The public model covers:
 - linear production sequences supplied by the user;
 - comparison of the same case across multiple presses.
 
-PyExtrusion does not currently calculate a complete thermal, metallurgical or force-based extrusion model.
+PyExtrusion also provides bounded analytical tools for constitutive behaviour,
+equivalent-axisymmetric pressure/force and selected thermal relationships. They
+are documented separately under [Engineering](../engineering/index.md).
+
+PyExtrusion does not currently calculate a complete thermal, metallurgical or
+die-specific extrusion-force model.
 
 ---
 
@@ -47,6 +52,12 @@ PyExtrusion deliberately uses explicit engineering units.
 | Productivity | kg/h or t/h |
 | Dead time | s |
 | Saw kerf | mm |
+| Engineering pressure / flow stress | MPa |
+| Engineering force baseline / reserve | MN |
+| Mean strain rate | s⁻¹ |
+| Temperature | °C |
+| Local heat generation | W/m³ |
+| Local heat flux | W/m² |
 
 Important convention:
 

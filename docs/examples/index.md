@@ -95,3 +95,17 @@ python examples/multi_press_comparison.py
 ```
 
 This example applies one process, one planning request and one complete order sequence to several presses without ranking or allocating work.
+
+## Engineering screening
+
+The [Engineering API example](../api-reference/engineering.md) provides a
+complete, runnable chain from modified Feltham mean strain rate through
+Zener-Hollomon, flow stress, pressure and `F_baseline`. It also keeps the Stüwe,
+Saha and interface-temperature calls separate so their different boundaries
+remain visible.
+
+## Production economics
+
+The [Economics API example](../api-reference/economics.md) calculates recurring
+production cost, material and scrap effects, first-run tooling/development cost
+and sales margin from explicit assumptions.

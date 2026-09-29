@@ -1,4 +1,4 @@
-"""Continuous technical production sequence with PyExtrusion 0.16.0."""
+"""Continuous technical production sequence with PyExtrusion 0.18.0."""
 
 from datetime import datetime
 

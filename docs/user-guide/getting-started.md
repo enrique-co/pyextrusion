@@ -8,14 +8,17 @@ PyExtrusion requires **Python 3.10 or newer**.
 
 From PyPI:
 
+These pages describe the 0.18.0 release candidate. Publication is pending, so this command installs the currently published package. Use candidate source or a local 0.18.0 wheel for pre-release validation.
+
 ```bash
 python -m pip install pyextrusion
 ```
 
-Or install a local release wheel:
+When validating a locally built release artifact instead, install that wheel
+explicitly:
 
 ```bash
-python -m pip install pyextrusion-0.17.0-py3-none-any.whl
+python -m pip install pyextrusion-0.18.0-py3-none-any.whl
 ```
 
 Verify the installation:
@@ -24,7 +27,7 @@ Verify the installation:
 pyextrusion info
 ```
 
-The output should identify PyExtrusion 0.17.0.
+When validating this candidate, the output must identify PyExtrusion 0.18.0. Do not assume that a PyPI installation already contains the candidate.
 
 ### Recommended: use a virtual environment
 
@@ -33,7 +36,7 @@ The output should identify PyExtrusion 0.17.0.
 ```powershell
 py -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
-.venv\Scripts\python -m pip install pyextrusion-0.17.0-py3-none-any.whl
+.venv\Scripts\python -m pip install pyextrusion
 ```
 
 #### Linux / macOS
@@ -41,7 +44,7 @@ py -m venv .venv
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install pyextrusion-0.17.0-py3-none-any.whl
+.venv/bin/python -m pip install pyextrusion
 ```
 
 ### Your first PyExtrusion objects

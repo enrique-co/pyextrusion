@@ -1,4 +1,4 @@
-# PyExtrusion integration guide — 0.16.0
+# PyExtrusion integration guide — 0.18.0
 
 PyExtrusion exposes one deterministic direct-extrusion engine through Python objects, JSON files and CLI commands. The calculations use the current PyExtrusion engine.
 

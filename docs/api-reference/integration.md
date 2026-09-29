@@ -1,4 +1,4 @@
-# PyExtrusion integration guide — 0.16.0
+# PyExtrusion integration guide — 0.18.0
 
 PyExtrusion exposes one deterministic direct-extrusion engine through Python objects, JSON files and CLI commands. The calculations use the current PyExtrusion engine.
 
@@ -220,3 +220,11 @@ pyextrusion errors
 ```
 
 Use `result.supported` to distinguish an unsupported model scenario from a physically non-viable supported scenario.
+
+## 11. Engineering and economics
+
+The production/planning engine remains separate from the analytical
+`pyextrusion.engineering` and deterministic `pyextrusion.economics`
+subpackages. Use the dedicated [Engineering API](engineering.md) and
+[Economics API](economics.md) references for those interfaces and their model
+boundaries.

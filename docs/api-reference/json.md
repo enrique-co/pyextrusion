@@ -108,7 +108,7 @@ For transition compatibility, planning JSON also emits a deprecated `reference` 
 
 ## ProductionSequence input JSON
 
-0.16.0 adds a JSON format for a user-supplied order list. The sequence uses the existing schema version `1.1`; no new core persistence schema is required.
+A JSON format is available for a user-supplied order list. The sequence uses the existing schema version `1.1`; no new core persistence schema is required.
 
 ```json
 {
@@ -189,7 +189,7 @@ Important ranges include cut length 1000-15000 mm, table length 10-100 m, nomina
 
 ## Multi-press comparison outputs
 
-PyExtrusion 0.16.0 does not require a new persisted input schema for comparisons. It reuses existing press, PlanningCase and production-sequence inputs.
+PyExtrusion does not require a new persisted input schema for comparisons. It reuses existing press, PlanningCase and production-sequence inputs.
 
 The Python comparison result objects serialize with `to_json()` and include:
 
