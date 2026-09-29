@@ -48,6 +48,22 @@ A_b = \frac{\pi D_b^2}{4}
 m_{b,mm} = \frac{A_b \rho}{1000}
 \]
 
+### Physical butt and billet length
+
+With areas in m², lengths in mm and `C_B,effective` in kg/mm:
+
+\[
+M_{butt}=\rho A_c L_{butt}/1000,\qquad
+L_{butt,eq}=M_{butt}/C_{B,effective}
+\]
+
+\[
+L_{billet}=M_{extruded}/C_{B,effective}+L_{butt,eq},\qquad
+M_{billet\ saw}=C_{B,effective} k_{billet}
+\]
+
+`C_B,effective` is geometric by default or the user/plant incoming-billet override. One butt is counted per billet, not per pull. See [Geometry](geometry.md#physical-butt-and-equivalent-incoming-billet-length) for the unchanged upsetting relation and override limitation.
+
 ### Nominal gross productivity
 
 \[

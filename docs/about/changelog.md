@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.18.0 — UNRELEASED / LOCAL CANDIDATE
+
+- Corrects physical butt semantics: `butt_mm` remains residual thickness inside the container; butt mass uses density and container area, then converts once to equivalent incoming-billet length.
+- Preserves measured `billet_kg_per_mm_override` for original-billet mass/length and billet-saw loss. It does not replace the container-section butt mass coefficient.
+- Applies equivalent butt length consistently to both supported production families and minimum/maximum checks, including detection of unsupported sequential-pull counts.
+- Adds per-billet butt mass, equivalent length and coefficient-source traces to calculation/process results. Existing physical input values, defaults and JSON input schemas remain unchanged; result schemas gain additive fields.
+- Keeps volume-based upsetting, pressure/rheology formulas, downstream kerfs and time rules unchanged. Derived contact length, friction, force and losses receive the corrected billet length/mass. Physical net productivity is invariant only when the selected configuration and events remain unchanged.
+- Adds independent physical-equation tests, partial-pull and sequential-pull coverage, strict geometric boundaries, override/rounding cases and propagation checks. Reframes the old two-cut boundary separately from billet-first selection policy.
+- Documents that observable lengths, losses, scores and discrete feasibility can differ from v0.17.0. This pre-1.0 physical correction is not a silent replacement of historical results.
+- Preserves equivalent-axisymmetric mechanical screening scope and limited thermal baselines. No new porthole correction, exit-temperature predictor or annual-economic workflow is introduced.
+- Local candidate only: no tag, release, remote push, PyPI publication or website deployment.
+
 ## 0.17.0
 
 - Adds the public `pyextrusion.engineering` foundation with strict provenance, metadata, force-limit, hydraulic, power, energy and specific-energy helpers.

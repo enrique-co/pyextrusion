@@ -8,7 +8,7 @@ press = load_press_json(HERE / "press_example_8in.json")
 case = load_case_json(HERE / "case_basic.json")
 
 manual = case.replace(
-    butt_mm=20,
+    butt_mm=20,  # Physical residual thickness in the container; no caller conversion.
     front_scrap_m=1.5,
     multi_billet_front_scrap_m=1.0,
 )
@@ -17,5 +17,8 @@ base_result = calculate_case(press, case)
 manual_result = calculate_case(press, manual)
 
 print("Base butt:", base_result.billet.butt_mm, base_result.billet.butt_source)
-print("Manual butt:", manual_result.billet.butt_mm, manual_result.billet.butt_source)
+print("Manual physical butt (mm):", manual_result.billet.butt_mm, manual_result.billet.butt_source)
+print("Butt mass per billet (kg):", manual_result.billet.butt_mass_kg)
+print("Equivalent incoming-billet butt (mm):", manual_result.billet.butt_equivalent_billet_mm)
+print("Incoming-billet kg/mm source:", manual_result.billet.mass_coefficient_source)
 print("Manual scrap:", manual_result.scrap.total_kg)

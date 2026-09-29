@@ -32,7 +32,11 @@ The number of billets contributing to one continuous pull. This can be 1 or more
 
 ### Butt / butt discard
 
-The short part of the billet intentionally left unextruded at the end of the stroke and discarded. It is sometimes called the butt end or discard.
+The residual aluminium left in the filled container at the end of the stroke and discarded. `butt_mm` measures its physical thickness in front of the dummy block. Its mass uses the container section, not the incoming-billet section.
+
+### Equivalent butt length
+
+The incoming-billet length representing the butt mass: `butt_mass_kg / effective_billet_kg_per_mm`. This differs from physical `butt_mm` when billet and container sections differ. Do not replace an existing physical 15, 20, 25, 30 or 35 mm input by this equivalent length.
 
 ### Complexity
 

@@ -1,6 +1,6 @@
 # Result field glossary
 
-PyExtrusion 0.16.0 exposes the following documented structured result fields. Use the exact dotted paths with `result.value()`, `result.select()`, or the CLI field commands.
+The PyExtrusion 0.18.0 local candidate exposes the following documented structured result fields. Use the exact dotted paths with `result.value()`, `result.select()`, or the CLI field commands. The three new butt/coefficient trace fields are always populated by the engine; `None` preserves manual construction of legacy result objects.
 
 | Field | Unit | Type | Description |
 |---|---|---|---|
@@ -36,9 +36,12 @@ PyExtrusion 0.16.0 exposes the following documented structured result fields. Us
 | `billet.length_mm` | mm | `float` | Mathematical total billet length used for the recommended configuration. |
 | `billet.recommended_length_mm` | mm | `int` | Industrial suggestion obtained by rounding the mathematical billet length upward to the next whole millimetre. |
 | `billet.count` | count | `int` | Number of billets required for the production quantity. |
-| `billet.butt_mm` | mm | `float` | Butt-discard length applied to the calculation. |
+| `billet.butt_mm` | mm | `float` | Physical residual butt thickness inside the container, not incoming-billet length. |
 | `billet.butt_source` | text | `str` | Origin of butt value: default_rule or user_override. |
 | `billet.kg_per_mm` | kg/mm | `float` | Billet mass coefficient derived from actual billet geometry/density or supplied override. |
+| `billet.butt_mass_kg` | kg/billet | `float` or `None` | One physical butt: density times container area times physical thickness in metres. |
+| `billet.butt_equivalent_billet_mm` | mm | `float` or `None` | Physical butt mass divided by the effective incoming-billet kg/mm coefficient. |
+| `billet.mass_coefficient_source` | text | `str` or `None` | Incoming-billet coefficient source: geometric or user_plant_override. |
 | `production.profiles_per_billet` | profiles/billet | `int` | Complete sequential pulls produced by one billet; maximum supported value is 2. |
 | `production.billets_per_pull` | billets/pull | `int` | Number of billets grouped into one continuous pull; dynamically limited by billet and table geometry. |
 | `production.cuts_per_pull` | count | `int` | Cuts represented by a complete pull. |
