@@ -1,9 +1,9 @@
 # Citation
 
-Local candidate citation (not a published release):
+Suggested software citation:
 
-> Enrique Calvo Ordonez. *PyExtrusion: Engineering calculation toolkit for aluminium extrusion*. Version 0.19.0, UNRELEASED CANDIDATE, 2026. https://pyextrusion.com
+> Enrique Calvo Ordonez. *PyExtrusion: Engineering calculation toolkit for aluminium extrusion*. Version 0.19.0, 2026-10-03. https://pyextrusion.com
 
-There is no release date, published v0.19.0 tag or DOI for this local candidate. Its base is official v0.18.0, commit `6677ebf170c9a1d46cc3b5b5b52de35c3c9e56de`.
+Use the [v0.19.0 release](https://github.com/enrique-co/pyextrusion/releases/tag/v0.19.0) to identify this version. Machine-readable citation metadata are provided in [CITATION.cff](https://github.com/enrique-co/pyextrusion/blob/v0.19.0/CITATION.cff). No DOI is claimed.
 
 The project is distributed under the Apache License 2.0.

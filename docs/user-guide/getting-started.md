@@ -1,6 +1,6 @@
 # Installation and first steps
 
-This checkout is **0.19.0 UNRELEASED CANDIDATE**. Install its local wheel to evaluate the candidate; PyPI installation below refers to published software, not this unuploaded candidate. Examples retaining `front_scrap_m` are legacy inputs; read [the trim migration guide](trim-topology.md) before changing them.
+This guide covers **PyExtrusion 0.19.0**. Examples retaining `front_scrap_m` are legacy inputs; read [the trim migration guide](trim-topology.md) before changing them.
 
 ### Requirements
 
@@ -11,7 +11,7 @@ PyExtrusion requires **Python 3.10 or newer**.
 From PyPI:
 
 ```bash
-python -m pip install pyextrusion
+python -m pip install pyextrusion==0.19.0
 ```
 
 When validating a locally built release artifact instead, install that wheel
@@ -27,7 +27,7 @@ Verify the installation:
 pyextrusion info
 ```
 
-The local candidate output should identify PyExtrusion 0.19.0 and UNRELEASED CANDIDATE.
+The output should identify PyExtrusion 0.19.0 and RELEASED.
 
 ### Recommended: use a virtual environment
 

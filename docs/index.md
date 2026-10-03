@@ -1,15 +1,15 @@
-# PyExtrusion 0.19.0 — UNRELEASED CANDIDATE
+# PyExtrusion 0.19.0
 
 **Deterministic engineering calculations for aluminium extrusion**
 
 PyExtrusion brings production planning, bounded analytical engineering
 models and deterministic production economics together in one Python package.
 
-!!! warning "Local 0.19.0 candidate — not published"
-    This candidate corrects multibillet trim topology and introduces canonical total trim per incoming billet. Read [trim topology and migration](user-guide/trim-topology.md). The published baseline below is 0.18.0, not the candidate.
+!!! info "Version 0.19.0 — 2026-10-03"
+    This release corrects multibillet trim topology and introduces canonical total trim per incoming billet. Read [trim topology and migration](user-guide/trim-topology.md) before updating existing inputs.
 
     ```bash
-    pip install pyextrusion==0.18.0
+    pip install pyextrusion==0.19.0
     ```
 
     See the [PyPI project page](https://pypi.org/project/pyextrusion/) or

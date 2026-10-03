@@ -1,6 +1,6 @@
 # Trim topology and legacy migration
 
-0.19.0 — **UNRELEASED CANDIDATE**. This is a physical behavior and public-input contract change, not a silent replacement of 0.18.0 results.
+**PyExtrusion 0.19.0**. This is a physical behavior and public-input contract change, not a silent replacement of 0.18.0 results.
 
 ## Canonical input
 

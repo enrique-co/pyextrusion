@@ -1,4 +1,4 @@
-# PyExtrusion integration guide — 0.19.0 UNRELEASED CANDIDATE
+# PyExtrusion integration guide — 0.19.0
 
 New inputs should use `trim_total_per_billet_m`. Examples retaining `front_scrap_m` below deliberately demonstrate the legacy contract (p=1 per billet, p=2 per pull). Canonical and non-null legacy inputs cannot be combined. See [explicit migration and public event counters](../user-guide/trim-topology.md).
 

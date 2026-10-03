@@ -1,6 +1,6 @@
 # Result field glossary
 
-PyExtrusion 0.19.0 — UNRELEASED CANDIDATE. These are the exact structured production result paths for `result.value()`, `result.select()` and the CLI. Trim/event fields are additive. See [trim topology and legacy migration](../user-guide/trim-topology.md) for canonical units, retained compatibility names, partial pulls and commercial positions versus physical events. Engineering and Economics expose their own result objects.
+PyExtrusion 0.19.0. These are the exact structured production result paths for `result.value()`, `result.select()` and the CLI. Trim/event fields are additive. See [trim topology and legacy migration](../user-guide/trim-topology.md) for canonical units, retained compatibility names, partial pulls and commercial positions versus physical events. Engineering and Economics expose their own result objects.
 
 | Field | Unit | Type | Description |
 |---|---|---|---|
