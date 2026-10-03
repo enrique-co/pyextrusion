@@ -45,7 +45,7 @@ def calculate_simple(
     cut_length_mm: float,
     bars_requested: int,
     profile_type: ProfileType | None = None,
-    front_scrap_m: float = 0.0,
+    front_scrap_m: float | None = None,
     complexity: Complexity = "normal",
     section_per_exit_m2: float | None = None,
     cuts: int | None = None,
@@ -53,6 +53,7 @@ def calculate_simple(
     multi_billet_front_scrap_m: float | None = None,
     supplement_10_pct: bool = False,
     ram_speed_mm_s: float | None = None,
+    trim_total_per_billet_m: float | None = None,
 ) -> CalculationResult:
     """Low-friction API backed by the same deterministic engine as StudyInput."""
     case = StudyCase(
@@ -67,6 +68,7 @@ def calculate_simple(
             cut_length_mm=cut_length_mm,
             bars_requested=bars_requested,
             front_scrap_m=front_scrap_m,
+            trim_total_per_billet_m=trim_total_per_billet_m,
             complexity=complexity,
             cuts=cuts,
             butt_mm=butt_mm,

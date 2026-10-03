@@ -110,7 +110,7 @@ def _validate_process(process: ProcessSpec) -> list[ValidationMessage]:
     fields = [
         (process.exit_speed_m_min is None or 1 <= process.exit_speed_m_min <= 100, "process.exit_speed_m_min", "must be between 1 and 100 m/min when provided"),
         (1000 <= process.cut_length_mm <= 15000, "process.cut_length_mm", "must be between 1000 and 15000 mm"),
-        (process.front_scrap_m >= 0, "process.front_scrap_m", "must be >= 0"),
+        (process.front_scrap_m is None or process.front_scrap_m >= 0, "process.front_scrap_m", "must be >= 0 when provided"),
         (process.complexity in {"normal", "medium", "high"}, "process.complexity", "must be normal, medium or high"),
     ]
     for ok, field, message in fields:
@@ -135,7 +135,7 @@ def _validate_production(production: ProductionSpec) -> list[ValidationMessage]:
         (production.exit_speed_m_min is None or 1 <= production.exit_speed_m_min <= 100, "production.exit_speed_m_min", "must be between 1 and 100 m/min when provided"),
         (1000 <= production.cut_length_mm <= 15000, "production.cut_length_mm", "must be between 1000 and 15000 mm"),
         (production.bars_requested >= 1, "production.bars_requested", "must be >= 1"),
-        (production.front_scrap_m >= 0, "production.front_scrap_m", "must be >= 0"),
+        (production.front_scrap_m is None or production.front_scrap_m >= 0, "production.front_scrap_m", "must be >= 0 when provided"),
         (
             production.complexity in {"normal", "medium", "high"},
             "production.complexity",
@@ -182,7 +182,7 @@ def validate_study(study: StudyInput) -> tuple[ValidationMessage, ...]:
     out = list(validate_press(study.press)) + _validate_profile(study.profile) + _validate_production(study.to_case().production)
     if study.cut_length_mm > study.press.table_length_m * 1000:
         out.append(ValidationMessage("error", "production.cut_length_mm", "must not exceed press table length", "PX1003"))
-    if study.front_scrap_m >= study.press.table_length_m:
+    if study.front_scrap_m is not None and study.front_scrap_m >= study.press.table_length_m:
         out.append(ValidationMessage("error", "production.front_scrap_m", "must be less than press table length", "PX1003"))
     if study.multi_billet_front_scrap_m is not None and study.multi_billet_front_scrap_m >= study.press.table_length_m:
         out.append(ValidationMessage("error", "production.multi_billet_front_scrap_m", "must be less than press table length", "PX1003"))

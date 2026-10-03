@@ -38,6 +38,7 @@ nav:
       - Installation & first calculation: user-guide/getting-started.md
       - Define a press: user-guide/press.md
       - Define a profile & process: user-guide/profile-process.md
+      - Trim topology & legacy migration: user-guide/trim-topology.md
       - Calculate a process: user-guide/calculate-process.md
       - Plan one production order: user-guide/planning.md
       - Production sequences: user-guide/production-sequences.md

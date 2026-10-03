@@ -97,9 +97,13 @@ bridge or porthole die.
 Arithmetic screening difference `F_press - F_baseline`. It is not guaranteed
 remaining capacity, a safety margin or force available for a porthole die.
 
-### Front scrap / front crop
+### Total trim / reject reserve and legacy front scrap
 
-Length intentionally lost at the front/start of a pull or billet contribution before usable finished bars are considered.
+`trim_total_per_billet_m` is total rejected length per incoming billet, split across sequential pulls and distributed around each commercial block. It is not only leading crop and is not predicted charge-weld length. Legacy `front_scrap_m` remains per billet for p=1 and per pull for p=2. See [trim topology](trim-topology.md).
+
+### Commercial positions and physical saw events
+
+`cuts` and `cuts_per_pull` count commercial positions per exit. The separate `production.final_saw_events` counts transverse saw strokes across all exits; `internal_billet_transitions`, `puller_saw_events` and `billet_saw_events` have separate physical meanings.
 
 ### Good kg
 

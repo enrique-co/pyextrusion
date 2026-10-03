@@ -2,6 +2,8 @@
 
 The `examples/` directory contains runnable Python and JSON examples.
 
+`examples/trim_migration.py` demonstrates a synthetic canonical total `1.2 m/billet` and its unchanged physical results. Earlier examples retain `front_scrap_m` deliberately as legacy inputs; do not blindly rename that field, especially for p=2. See [trim topology and migration](../user-guide/trim-topology.md).
+
 ## Minimal press from nominal size
 
 ```python

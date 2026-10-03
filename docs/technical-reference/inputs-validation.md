@@ -17,6 +17,9 @@ The current public model accepts the following supported ranges.
 
 Additional relational checks apply, for example:
 
+- canonical `trim_total_per_billet_m` must be finite and nonnegative; booleans and numeric strings are rejected;
+- any non-null legacy `front_scrap_m` or `multi_billet_front_scrap_m` alongside canonical trim is an ambiguity error (including legacy zero); absent/null means unspecified;
+- canonical total trim is distributed before geometric feasibility checks; legacy p=2 inputs retain their per-pull meaning, with [explicit migration](../user-guide/trim-topology.md);
 - billet minimum cannot exceed billet maximum;
 - cut length cannot exceed the available table length;
 - container bore must be larger than the actual billet diameter when both are explicitly supplied;

@@ -15,7 +15,7 @@ The recommended whole-millimetre value is intended as an engineering convenience
 
 Finished cut length is interpreted as the **net finished-bar length**. Physical downstream saw kerfs therefore require additional extruded metal beyond the finished bars. Puller and final-saw kerf allowances are included in the physical process length used for billet geometry, table occupancy and technical extrusion time.
 
-For multi-billet continuous pulls, pull-level kerfs are shared by the billets forming the pull. The process-level billet recommendation represents the selected complete-pull geometry. If an order finishes with a partial multi-billet pull, exact order-level saw events are used for timing and losses; the final partial pull can require plant-specific billet-length handling.
+For positive-trim multi-billet continuous pulls, only the puller kerf is shared once per pull; each billet commercial block requires its own `cuts + 1` final-saw boundaries. The process-level billet recommendation represents the selected complete-pull geometry. If an order finishes with a partial multi-billet pull, exact order-level saw events are used for timing and losses; the final partial pull can require plant-specific billet-length handling. See [trim topology](../user-guide/trim-topology.md) for zero-trim behavior and actual-group accounting.
 
 The exact internal decision logic used to select among valid candidates is implementation detail and is not part of the public Technical Reference.
 
@@ -30,7 +30,7 @@ PyExtrusion separates process losses into understandable engineering categories.
 The fixed-loss group can include:
 
 - butt / discard;
-- front scrap;
+- total trim/reject reserve (`front_scrap_kg` is the retained compatibility result name);
 - billet saw kerf;
 - puller saw kerf;
 - final saw kerf.

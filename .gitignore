@@ -31,3 +31,6 @@ Thumbs.db
 # Local configuration / secrets
 .env
 *.env
+
+# Plant-derived acceptance fixtures are private and must remain external.
+tests/fixtures/trim_topology/

@@ -1,5 +1,7 @@
 # Python API
 
+`Process`, `Production` and `calculate_simple` accept canonical `trim_total_per_billet_m`. Use `migrate_legacy_trim(case, profiles_per_billet=2)` for a verified legacy two-pull case. Non-null legacy/canonical combinations are rejected. See [trim contract, migration and public counters](../user-guide/trim-topology.md).
+
 ## Main objects
 
 ```python

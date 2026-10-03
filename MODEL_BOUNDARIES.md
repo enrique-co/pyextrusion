@@ -4,7 +4,9 @@ Understanding what a tool does **not** calculate is as important as understandin
 
 ### Current process scope
 
-PyExtrusion 0.18.0 is intended for **direct aluminium extrusion**.
+PyExtrusion 0.19.0 is intended for **direct aluminium extrusion**.
+
+Canonical trim is an industrial total reject reserve per incoming billet, not a predicted metallurgical charge-weld length. Positive-trim multibillet topology reserves final-saw boundaries per actual billet contribution. Zero trim retains the historical end-preparation convention and does not certify weld quality. No new saw-operation time, press delay or thermal/mechanical law is introduced. See [trim topology and migration](docs/user-guide/trim-topology.md).
 
 ### Current supported production geometry
 

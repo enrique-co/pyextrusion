@@ -42,7 +42,8 @@ PyExtrusion deliberately uses explicit engineering units.
 | Billet length | mm |
 | Cut length | mm |
 | Table length | m |
-| Front scrap | m |
+| Canonical total trim / reject reserve | m per incoming billet (sum over its sequential pulls) |
+| Legacy front scrap | m per contribution to one pull; p=2 uses it twice per billet |
 | Exit / extrusion speed | m/min |
 | Ram speed | mm/s or derived m/min |
 | Linear weight | kg/m |

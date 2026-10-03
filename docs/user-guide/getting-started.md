@@ -1,5 +1,7 @@
 # Installation and first steps
 
+This guide covers **PyExtrusion 0.19.0**. Examples retaining `front_scrap_m` are legacy inputs; read [the trim migration guide](trim-topology.md) before changing them.
+
 ### Requirements
 
 PyExtrusion requires **Python 3.10 or newer**.
@@ -9,14 +11,14 @@ PyExtrusion requires **Python 3.10 or newer**.
 From PyPI:
 
 ```bash
-python -m pip install pyextrusion
+python -m pip install pyextrusion==0.19.0
 ```
 
 When validating a locally built release artifact instead, install that wheel
 explicitly:
 
 ```bash
-python -m pip install pyextrusion-0.18.0-py3-none-any.whl
+python -m pip install pyextrusion-0.19.0-py3-none-any.whl
 ```
 
 Verify the installation:
@@ -25,7 +27,7 @@ Verify the installation:
 pyextrusion info
 ```
 
-The output should identify PyExtrusion 0.18.0.
+The output should identify PyExtrusion 0.19.0 and RELEASED.
 
 ### Recommended: use a virtual environment
 

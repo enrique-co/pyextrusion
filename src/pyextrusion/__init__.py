@@ -1,6 +1,8 @@
 """PyExtrusion - engineering calculation toolkit for aluminium extrusion."""
 from ._meta import __author__, __description__, __license__, __title__, __url__, __version__
+from ._meta import __release_status__
 from .api import calculate_case, calculate_process, calculate_simple, compare_presses
+from .migration import migrate_legacy_trim
 from .comparison import (
     ProcessComparisonResult, PlanningComparisonResult, ProductionSequenceComparisonResult,
     compare_processes, compare_planning, compare_production_sequences,
@@ -85,6 +87,7 @@ Process = ProcessSpec
 Production = ProductionSpec
 
 __all__ = [
+    "migrate_legacy_trim",
     "calculate", "calculate_case", "calculate_process", "calculate_simple", "compare_presses",
     "compare_processes", "compare_planning", "compare_production_sequences",
     "normalize_annual_demand", "calculate_annual_demand", "calculate_planning",
@@ -120,5 +123,5 @@ __all__ = [
     "ValidationMessage", "validate_press", "validate_case", "validate_planning_case", "validate_study",
     "validate_press_json", "validate_case_json", "validate_planning_case_json", "validate_study_json",
     "validate_annual_demand", "validate_annual_demand_json", "validate_production_sequence_json",
-    "__title__", "__version__", "__description__", "__author__", "__license__", "__url__",
+    "__title__", "__version__", "__release_status__", "__description__", "__author__", "__license__", "__url__",
 ]

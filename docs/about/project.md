@@ -1,6 +1,6 @@
 # About PyExtrusion
 
-**PyExtrusion 0.18.0** is a deterministic engineering calculation toolkit for
+**PyExtrusion 0.19.0** is a deterministic engineering calculation toolkit for
 direct aluminium extrusion.
 
 - Project: PyExtrusion

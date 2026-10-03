@@ -485,16 +485,20 @@ class ProcessSpec:
 
     ``butt_mm`` is physical residual thickness inside the container, not an
     equivalent length of the incoming billet. None selects the physical default.
+    ``trim_total_per_billet_m`` is total reject reserve per incoming billet.
+    Legacy ``front_scrap_m`` remains per sequential pull when p=2. Never combine
+    the canonical input with a non-None legacy trim field.
     """
 
     exit_speed_m_min: float | None
     cut_length_mm: float
-    front_scrap_m: float = 0.0
+    front_scrap_m: float | None = None
     complexity: Complexity = "normal"
     cuts: int | None = None
     butt_mm: float | None = None
     multi_billet_front_scrap_m: float | None = None
     ram_speed_mm_s: float | None = None
+    trim_total_per_billet_m: float | None = None
 
     def __post_init__(self) -> None:
         if (self.exit_speed_m_min is None) == (self.ram_speed_mm_s is None):
@@ -504,15 +508,17 @@ class ProcessSpec:
         if self.ram_speed_mm_s is not None:
             object.__setattr__(self, "ram_speed_mm_s", require_number(self.ram_speed_mm_s, "process.ram_speed_mm_s", InvalidProductionInputError, minimum=0.0, exclusive_minimum=True))
         object.__setattr__(self, "cut_length_mm", require_number(self.cut_length_mm, "process.cut_length_mm", InvalidProductionInputError, minimum=1000.0, maximum=15000.0))
-        object.__setattr__(self, "front_scrap_m", require_number(self.front_scrap_m, "process.front_scrap_m", InvalidProductionInputError, minimum=0.0))
+        from ._trim import validate_trim_inputs
+        front, total, multi = validate_trim_inputs(self.front_scrap_m, self.trim_total_per_billet_m, self.multi_billet_front_scrap_m)
+        object.__setattr__(self, "front_scrap_m", front)
+        object.__setattr__(self, "trim_total_per_billet_m", total)
+        object.__setattr__(self, "multi_billet_front_scrap_m", multi)
         if self.complexity not in {"normal", "medium", "high"}:
             raise InvalidProductionInputError("process.complexity must be normal, medium or high")
         if self.cuts is not None:
             object.__setattr__(self, "cuts", require_int(self.cuts, "process.cuts", InvalidProductionInputError, minimum=1))
         if self.butt_mm is not None:
             object.__setattr__(self, "butt_mm", require_number(self.butt_mm, "process.butt_mm", InvalidProductionInputError, minimum=0.0))
-        if self.multi_billet_front_scrap_m is not None:
-            object.__setattr__(self, "multi_billet_front_scrap_m", require_number(self.multi_billet_front_scrap_m, "process.multi_billet_front_scrap_m", InvalidProductionInputError, minimum=0.0))
 
     @classmethod
     def from_ram_speed(cls, *, ram_speed_mm_s: float, cut_length_mm: float, **kwargs: Any) -> "ProcessSpec":
@@ -564,6 +570,7 @@ class PlanningCase:
             exit_speed_m_min=q.exit_speed_m_min,
             cut_length_mm=q.cut_length_mm,
             front_scrap_m=q.front_scrap_m,
+            trim_total_per_billet_m=q.trim_total_per_billet_m,
             complexity=q.complexity,
             cuts=q.cuts,
             butt_mm=q.butt_mm,
@@ -580,6 +587,7 @@ class PlanningCase:
                 cut_length_mm=q.cut_length_mm,
                 bars_requested=bars_requested,
                 front_scrap_m=q.front_scrap_m,
+                trim_total_per_billet_m=q.trim_total_per_billet_m,
                 complexity=q.complexity,
                 cuts=q.cuts,
                 butt_mm=q.butt_mm,
@@ -601,13 +609,14 @@ class ProductionSpec:
     exit_speed_m_min: float | None
     cut_length_mm: float
     bars_requested: int
-    front_scrap_m: float = 0.0
+    front_scrap_m: float | None = None
     complexity: Complexity = "normal"
     cuts: int | None = None
     butt_mm: float | None = None
     multi_billet_front_scrap_m: float | None = None
     supplement_10_pct: bool = False
     ram_speed_mm_s: float | None = None
+    trim_total_per_billet_m: float | None = None
 
     def __post_init__(self) -> None:
         if (self.exit_speed_m_min is None) == (self.ram_speed_mm_s is None):
@@ -618,15 +627,17 @@ class ProductionSpec:
             object.__setattr__(self, "ram_speed_mm_s", require_number(self.ram_speed_mm_s, "production.ram_speed_mm_s", InvalidProductionInputError, minimum=0.0, exclusive_minimum=True))
         object.__setattr__(self, "cut_length_mm", require_number(self.cut_length_mm, "production.cut_length_mm", InvalidProductionInputError, minimum=1000.0, maximum=15000.0))
         object.__setattr__(self, "bars_requested", require_int(self.bars_requested, "production.bars_requested", InvalidProductionInputError, minimum=1))
-        object.__setattr__(self, "front_scrap_m", require_number(self.front_scrap_m, "production.front_scrap_m", InvalidProductionInputError, minimum=0.0))
+        from ._trim import validate_trim_inputs
+        front, total, multi = validate_trim_inputs(self.front_scrap_m, self.trim_total_per_billet_m, self.multi_billet_front_scrap_m, "production")
+        object.__setattr__(self, "front_scrap_m", front)
+        object.__setattr__(self, "trim_total_per_billet_m", total)
+        object.__setattr__(self, "multi_billet_front_scrap_m", multi)
         if self.complexity not in {"normal", "medium", "high"}:
             raise InvalidProductionInputError("production.complexity must be normal, medium or high")
         if self.cuts is not None:
             object.__setattr__(self, "cuts", require_int(self.cuts, "production.cuts", InvalidProductionInputError, minimum=1))
         if self.butt_mm is not None:
             object.__setattr__(self, "butt_mm", require_number(self.butt_mm, "production.butt_mm", InvalidProductionInputError, minimum=0.0))
-        if self.multi_billet_front_scrap_m is not None:
-            object.__setattr__(self, "multi_billet_front_scrap_m", require_number(self.multi_billet_front_scrap_m, "production.multi_billet_front_scrap_m", InvalidProductionInputError, minimum=0.0))
         object.__setattr__(self, "supplement_10_pct", require_bool(self.supplement_10_pct, "production.supplement_10_pct", InvalidProductionInputError))
 
     @classmethod
@@ -696,6 +707,7 @@ class StudyCase:
                 exit_speed_m_min=p.exit_speed_m_min,
                 cut_length_mm=p.cut_length_mm,
                 front_scrap_m=p.front_scrap_m,
+                trim_total_per_billet_m=p.trim_total_per_billet_m,
                 complexity=p.complexity,
                 cuts=p.cuts,
                 butt_mm=p.butt_mm,
@@ -713,6 +725,7 @@ class StudyCase:
             cut_length_mm=p.cut_length_mm,
             bars_requested=p.bars_requested,
             front_scrap_m=p.front_scrap_m,
+            trim_total_per_billet_m=p.trim_total_per_billet_m,
             complexity=p.complexity,
             cuts=p.cuts,
             butt_mm=p.butt_mm,
@@ -730,12 +743,13 @@ class ProcessInput:
     profile: ProfileSpec
     exit_speed_m_min: float | None
     cut_length_mm: float
-    front_scrap_m: float = 0.0
+    front_scrap_m: float | None = None
     complexity: Complexity = "normal"
     cuts: int | None = None
     butt_mm: float | None = None
     multi_billet_front_scrap_m: float | None = None
     ram_speed_mm_s: float | None = None
+    trim_total_per_billet_m: float | None = None
 
 
 @dataclass(frozen=True)
@@ -745,7 +759,7 @@ class StudyInput:
     exit_speed_m_min: float | None
     cut_length_mm: float
     bars_requested: int
-    front_scrap_m: float = 0.0
+    front_scrap_m: float | None = None
     complexity: Complexity = "normal"
     cuts: int | None = None
     butt_mm: float | None = None
@@ -753,6 +767,7 @@ class StudyInput:
     supplement_10_pct: bool = False
     effective_bars_target_override: int | None = None
     ram_speed_mm_s: float | None = None
+    trim_total_per_billet_m: float | None = None
 
     def to_case(self) -> StudyCase:
         return StudyCase(
@@ -762,6 +777,7 @@ class StudyInput:
                 cut_length_mm=self.cut_length_mm,
                 bars_requested=self.bars_requested,
                 front_scrap_m=self.front_scrap_m,
+                trim_total_per_billet_m=self.trim_total_per_billet_m,
                 complexity=self.complexity,
                 cuts=self.cuts,
                 butt_mm=self.butt_mm,
@@ -793,6 +809,11 @@ class ConfigurationResult(_ResultBlock):
     cuts_per_pull: int = 0
     bars_per_pull: int = 0
     reasons: tuple[str, ...] = ()
+    trim_total_per_billet_m: float = 0.0
+    trim_per_pull_m: float = 0.0
+    final_saw_events_per_pull: int = 0
+    internal_billet_transitions_per_pull: int = 0
+    trim_topology: str = "zero_trim_end_allowance"
 
 
 @dataclass(frozen=True)
@@ -851,6 +872,12 @@ class ProcessResult:
     butt_mass_kg: float | None = None
     butt_equivalent_billet_mm: float | None = None
     billet_mass_coefficient_source: str | None = None
+    trim_total_per_billet_m: float = 0.0
+    trim_per_pull_m: float = 0.0
+    trim_input_semantics: str = "default_zero"
+    trim_topology: str = "zero_trim_end_allowance"
+    final_saw_events_per_pull: int = 0
+    internal_billet_transitions_per_pull: int = 0
 
     @property
     def first_billet_time_min(self) -> float:
@@ -952,6 +979,10 @@ class ProductionResult(_ResultBlock):
     good_kg_requested: float
     good_kg_effective_target: float
     good_kg_manufactured: float
+    final_saw_events: int = 0
+    internal_billet_transitions: int = 0
+    puller_saw_events: int = 0
+    billet_saw_events: int = 0
 
 
 @dataclass(frozen=True)
@@ -1012,6 +1043,10 @@ class ProcessTraceResult(_ResultBlock):
     supplement_10_pct: bool
     supplement_factor: float
     target_productivity_source: str
+    trim_total_per_billet_m: float = 0.0
+    trim_per_pull_m: float = 0.0
+    trim_input_semantics: str = "default_zero"
+    trim_topology: str = "zero_trim_end_allowance"
 
 
 @dataclass(frozen=True)

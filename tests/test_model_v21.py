@@ -59,7 +59,7 @@ def test_v21_dynamic_multi_billet_can_exceed_three_billets_per_pull():
     expected_occupancy = (
         5 * (8.0 + 2.0)
         + (p.saws.puller_mm / 1000.0)
-        + (5 + 1) * (p.saws.final_mm / 1000.0)
+        + 5 * (1 + 1) * (p.saws.final_mm / 1000.0)
     )
     assert r.table_occupancy_length_m == pytest.approx(expected_occupancy)
 
@@ -92,21 +92,23 @@ def test_v21_billet_first_does_not_shorten_billet_to_fit_more_billets():
     short_segment = cut_m + 2.0
     assert math.floor(54 / short_segment) == 4
     butt_mass = p.density_kg_m3 * math.pi * p.container_diameter_mm**2 / 4 * r.butt_mm / 1e9
-    short_physical = short_segment + p.saws.final_mm / 1000 + (p.saws.puller_mm + p.saws.final_mm) / 4000
+    short_physical = short_segment + 2*p.saws.final_mm / 1000 + p.saws.puller_mm / 4000
     short_billet = (4.79 * short_physical + butt_mass) / r.billet.kg_per_mm
     assert short_billet < one.billet_length_mm
 
 
 def test_physical_butt_crosses_old_two_cut_boundary_without_rounding():
     p = press8()
-    inputs = dict(linear_weight_kg_m=4.8, exits=1, profile_type="solid",
+    inputs = dict(linear_weight_kg_m=4.799, exits=1, profile_type="solid",
                   exit_speed_m_min=15, cut_length_mm=9800, bars_requested=100, front_scrap_m=2)
     automatic = calculate_simple(p, **inputs)
     candidate = calculate_simple(p, **inputs, cuts=2)
     one = next(c for c in candidate.configurations if c.profiles_per_billet == 1)
     cb = p.density_kg_m3 * math.pi * p.billet_diameter_mm**2 / 4 / 1e9
     mb = p.density_kg_m3 * math.pi * p.container_diameter_mm**2 / 4 * candidate.butt_mm / 1e9
-    useful = 4.8 * one.length_per_billet_m / cb
+    # Preserve this test's butt-specific straddling boundary after the separately
+    # authorized extra multibillet final-kerf allowance in 0.19.0.
+    useful = 4.799 * one.length_per_billet_m / cb
     assert useful + candidate.butt_mm < 1200  # Superseded v0.17.0 premise.
     assert useful + mb / cb > 1200
     assert one.billet_length_mm == pytest.approx(useful + mb / cb, rel=2e-12)
@@ -139,10 +141,10 @@ def test_v21_multi_billet_front_scrap_reoptimizes_billet_before_k():
     assert cfg.front_scrap_per_billet_m == pytest.approx(1.0)
     nominal_segment = cfg.cuts * 7.0 + 1.0
     final_kerf_m = p.saws.final_mm / 1000.0
-    shared_kerf_m = (p.saws.puller_mm + p.saws.final_mm) / 1000.0
+    shared_kerf_m = p.saws.puller_mm / 1000.0
     expected_physical_per_billet = (
         nominal_segment
-        + cfg.cuts * final_kerf_m
+        + (cfg.cuts + 1) * final_kerf_m
         + shared_kerf_m / cfg.billets_per_pull
     )
     expected_useful = 4.0 * expected_physical_per_billet / 0.087
@@ -197,7 +199,8 @@ def test_v21_multi_billet_puller_and_final_saw_are_per_pull_with_partial_last_pu
     expected_puller = (p.saws.puller_mm / 1000) * kg_m_total * 2
     assert r.scrap.puller_saw_kg == pytest.approx(expected_puller)
 
-    expected_final_events = 1 * (1 * 5 + 1) + (1 * 2 + 1)
+    # Each actual billet contribution has two positive-reject boundaries.
+    expected_final_events = 5 * (1 + 1) + 2 * (1 + 1)
     expected_final = (p.saws.final_mm / 1000) * kg_m_total * expected_final_events
     assert r.scrap.final_saw_kg == pytest.approx(expected_final)
     assert any("partial multi-billet pull" in w.lower() for w in r.warnings)

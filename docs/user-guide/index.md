@@ -1,6 +1,6 @@
 # User Guide
 
-Use this guide to learn PyExtrusion 0.18.0 from a practical, task-oriented
+Use this guide to learn PyExtrusion 0.19.0 from a practical, task-oriented
 point of view. The package now covers three related areas: production and
 planning, bounded analytical engineering tools, and deterministic economics.
 

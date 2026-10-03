@@ -7,6 +7,7 @@ from dataclasses import replace
 from .api import calculate_case, compare_presses
 from .comparison import compare_processes, compare_planning, compare_production_sequences
 from ._meta import __author__, __description__, __license__, __title__, __url__, __version__
+from ._meta import __release_status__
 from .core import calculate
 from .demand import AnnualDemandSpec, calculate_annual_demand
 from .planning import PlanningRequest, calculate_planning
@@ -257,6 +258,7 @@ def main() -> None:
     try:
         if args.command == "info":
             print(f"{__title__} {__version__}")
+            print(__release_status__)
             print(__description__)
             print(f"Created by {__author__}")
             print(f"License: {__license__}")

@@ -2,6 +2,10 @@
 
 PyExtrusion writes **schema version 1.1**. Historical schemas `0.2` through `1.0` remain readable.
 
+## Canonical trim in 0.19.0
+
+The additive `production.trim_total_per_billet_m` or `process.trim_total_per_billet_m` field means total reject reserve per incoming billet. Omit both legacy trim fields or set them to `null`; any non-null combination is `PX1003`, including zero. Absent trim means zero. A synthetic legacy value `front_scrap_m: 0.6` must explicitly migrate to canonical total `1.2` for its verified two-pull family. Loading legacy JSON does not silently migrate it. The examples below retain their legacy meanings; [migration instructions](../user-guide/trim-topology.md) explain the compatible route. Canonical files require 0.19.0 readers; schema 1.1 alone does not imply an older reader accepts new keys.
+
 ## Physical butt contract
 
 The JSON input key remains `butt_mm`, in `production` or `process`: physical residual thickness inside the container. Existing physical mm values are not converted by the caller. `null` continues to select the physical default/rule. Schema versions and input keys are unchanged.

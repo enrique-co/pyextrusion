@@ -5,6 +5,7 @@ from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 
 from .errors import InvalidPressConfigurationError, InvalidProfileInputError, InvalidProductionInputError
 from ._strict import require_bool, require_int, require_number
+from ._trim import validate_trim_inputs
 from .models import (
     BilletResult,
     CalculationResult,
@@ -66,6 +67,7 @@ class _ResolvedProcess:
     bars_per_billet: int
     applied_front_scrap_m: float
     applied_front_scrap_source: str
+    trim_input_semantics: str
     multi_scrap_m: float
     multi_scrap_source: str
     cuts_source: str
@@ -172,8 +174,8 @@ def _validate_process(data: ProcessInput | StudyInput) -> None:
     if data.ram_speed_mm_s is not None:
         require_number(data.ram_speed_mm_s, "process.ram_speed_mm_s", InvalidProductionInputError, minimum=0.0, exclusive_minimum=True)
     require_number(data.cut_length_mm, "process.cut_length_mm", InvalidProductionInputError, minimum=1000.0, maximum=15000.0)
-    require_number(data.front_scrap_m, "process.front_scrap_m", InvalidProductionInputError, minimum=0.0)
-    if data.front_scrap_m >= p.table_length_m:
+    validate_trim_inputs(data.front_scrap_m, data.trim_total_per_billet_m, data.multi_billet_front_scrap_m)
+    if data.front_scrap_m is not None and data.front_scrap_m >= p.table_length_m:
         raise InvalidProductionInputError("process.front_scrap_m must be less than press.table_length_m")
     if data.multi_billet_front_scrap_m is not None:
         require_number(data.multi_billet_front_scrap_m, "process.multi_billet_front_scrap_m", InvalidProductionInputError, minimum=0.0)
@@ -300,6 +302,14 @@ def _configuration(
         cuts_per_pull=cuts_per_pull,
         bars_per_pull=bars_per_pull,
         reasons=tuple(reasons),
+        trim_total_per_billet_m=front_scrap_per_billet_m * profiles_per_billet,
+        trim_per_pull_m=front_scrap_per_billet_m * billets_per_pull,
+        final_saw_events_per_pull=(
+            cuts * billets_per_pull + (billets_per_pull if front_scrap_per_billet_m > 0 else 1)
+            if cuts >= 1 else 0
+        ),
+        internal_billet_transitions_per_pull=max(billets_per_pull - 1, 0),
+        trim_topology="distributed_positive_trim" if front_scrap_per_billet_m > 0 else "zero_trim_end_allowance",
     )
 
 
@@ -399,21 +409,44 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
     puller_kerf_m = p.saws.puller_mm / 1000.0
     final_kerf_m = p.saws.final_mm / 1000.0
 
+    canonical_trim = data.trim_total_per_billet_m
+    legacy_front = data.front_scrap_m if data.front_scrap_m is not None else 0.0
+    standard_trim = canonical_trim if canonical_trim is not None else legacy_front
+    sequential_trim = canonical_trim / 2.0 if canonical_trim is not None else legacy_front
+    trim_input_semantics = (
+        "canonical_total_per_incoming_billet" if canonical_trim is not None
+        else "legacy_front_per_contribution_or_sequential_pull"
+        if data.front_scrap_m is not None or data.multi_billet_front_scrap_m is not None
+        else "default_zero"
+    )
+    if trim_input_semantics.startswith("legacy_"):
+        warnings.append(
+            "Legacy front_scrap_m semantics: per billet for p=1, per sequential pull for p=2. "
+            "Use trim_total_per_billet_m for an explicit incoming-billet total."
+        )
+
     def _one_profile_cfg(front_scrap_m: float, source: str, *, require_multi: bool = False) -> ConfigurationResult:
         def build(n: int) -> ConfigurationResult:
             base_segment_m = n * cut_m + front_scrap_m if n >= 1 else 0.0
             per_billet_nonshared_m = (
                 base_segment_m + n * final_kerf_m if n >= 1 else 0.0
             )
-            shared_pull_kerf_m = puller_kerf_m + final_kerf_m
+            # Positive trim has one extra separation frontier per contribution.
+            # Zero trim retains the legacy single end-preparation allowance per pull.
+            distributed = front_scrap_m > 0
+            shared_pull_kerf_m = puller_kerf_m + (0.0 if distributed else final_kerf_m)
+            allocation_per_billet_m = per_billet_nonshared_m + (final_kerf_m if distributed else 0.0)
             available_for_billets_m = p.table_length_m - shared_pull_kerf_m
             k = (
-                math.floor(available_for_billets_m / per_billet_nonshared_m)
-                if per_billet_nonshared_m > 0 and available_for_billets_m >= 0
+                math.floor(available_for_billets_m / allocation_per_billet_m)
+                if allocation_per_billet_m > 0 and available_for_billets_m >= 0
                 else 0
             )
             full_pull_m = (
-                k * per_billet_nonshared_m + shared_pull_kerf_m if k >= 1 else 0.0
+                # Preserve the single-pull arithmetic order from 0.18.0.
+                k * per_billet_nonshared_m + (puller_kerf_m + final_kerf_m)
+                + ((k - 1) * final_kerf_m if distributed else 0.0)
+                if k >= 1 else 0.0
             )
             physical_per_billet_m = full_pull_m / k if k >= 1 else 0.0
             useful_mm, billet_mm = (
@@ -479,11 +512,12 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
             ),
         )
 
-    cfg_one_standard = _one_profile_cfg(data.front_scrap_m, "standard")
+    standard_source = "canonical_total_per_billet" if canonical_trim is not None else "standard"
+    cfg_one_standard = _one_profile_cfg(standard_trim, standard_source)
     one_candidates: list[ConfigurationResult] = []
     if data.multi_billet_front_scrap_m is None:
         one_candidates.append(cfg_one_standard)
-        multi_scrap = data.front_scrap_m
+        multi_scrap = standard_trim
         multi_scrap_source = "standard_fallback"
     else:
         multi_scrap = data.multi_billet_front_scrap_m
@@ -511,7 +545,7 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
 
     def _double_profile_cfg() -> ConfigurationResult:
         def build(n: int) -> ConfigurationResult:
-            base_per_profile_m = n * cut_m + data.front_scrap_m if n >= 1 else 0.0
+            base_per_profile_m = n * cut_m + sequential_trim if n >= 1 else 0.0
             physical_per_profile_m = (
                 base_per_profile_m
                 + puller_kerf_m
@@ -544,8 +578,8 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
                 billets_per_configuration=1,
                 profiles_per_configuration=2,
                 cuts=n,
-                front_scrap_per_billet_m=data.front_scrap_m,
-                front_scrap_source="standard",
+                front_scrap_per_billet_m=sequential_trim,
+                front_scrap_source=standard_source,
                 length_per_profile_m=physical_per_profile_m,
                 length_per_billet_m=total_extruded_m,
                 total_configuration_length_m=total_extruded_m,
@@ -589,9 +623,25 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         for n in n_values:
             if n < 1:
                 continue
+            if canonical_trim is not None:
+                # Diagnostic only: p>=3 stays unsupported. Total trim is not
+                # repeated p times when estimating the minimum required p.
+                base_m = n * cut_m + puller_kerf_m + (n + 1) * final_kerf_m
+                room_m = p.table_length_m - base_m
+                if room_m < 0 or (room_m == 0 and canonical_trim > 0):
+                    continue
+                useful_min_m = max(0.0, p.billet_min_length_mm - butt_equivalent_billet_mm) * p.billet_weight_kg_per_mm / kg_m_total
+                useful_max_m = max(0.0, p.billet_max_length_mm - butt_equivalent_billet_mm) * p.billet_weight_kg_per_mm / kg_m_total
+                min_profiles = max(3, math.ceil((useful_min_m - canonical_trim) / base_m))
+                if canonical_trim > 0:
+                    min_profiles = max(min_profiles, math.ceil(canonical_trim / room_m))
+                max_profiles = math.floor((useful_max_m - canonical_trim) / base_m)
+                if min_profiles <= max_profiles:
+                    best = min_profiles if best is None else min(best, min_profiles)
+                continue
             physical_per_profile_m = (
                 n * cut_m
-                + data.front_scrap_m
+                + legacy_front
                 + puller_kerf_m
                 + (n + 1) * final_kerf_m
             )
@@ -659,9 +709,12 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         if selected and selected_cuts >= 1 else 0
     )
 
-    applied_front_scrap = data.front_scrap_m
+    applied_front_scrap = standard_trim
     applied_front_scrap_source = "standard"
-    if selected and selected.profiles_per_billet == 1 and selected.front_scrap_source == "user_override":
+    if canonical_trim is not None:
+        applied_front_scrap = canonical_trim / profiles_per_billet if profiles_per_billet else canonical_trim
+        applied_front_scrap_source = "canonical_total_per_billet"
+    elif selected and selected.profiles_per_billet == 1 and selected.front_scrap_source == "user_override":
         applied_front_scrap = selected.front_scrap_per_billet_m
         applied_front_scrap_source = "multi_billet_user_override"
         warnings.append(
@@ -715,6 +768,7 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         bars_per_billet=bars_per_billet,
         applied_front_scrap_m=applied_front_scrap,
         applied_front_scrap_source=applied_front_scrap_source,
+        trim_input_semantics=trim_input_semantics,
         multi_scrap_m=multi_scrap,
         multi_scrap_source=multi_scrap_source,
         cuts_source="user_override" if fixed_by_user else "automatic_billet_first",
@@ -775,6 +829,13 @@ def calculate_process(data: ProcessInput) -> ProcessResult:
         billet_mass_coefficient_source=r.press.billet_mass_coefficient_source,
         applied_front_scrap_m=r.applied_front_scrap_m,
         applied_front_scrap_source=r.applied_front_scrap_source,
+        trim_total_per_billet_m=(selected.trim_total_per_billet_m if selected
+                                else data.trim_total_per_billet_m or 0.0),
+        trim_per_pull_m=selected.trim_per_pull_m if selected else 0.0,
+        trim_input_semantics=r.trim_input_semantics,
+        trim_topology=selected.trim_topology if selected else "unresolved",
+        final_saw_events_per_pull=selected.final_saw_events_per_pull if selected else 0,
+        internal_billet_transitions_per_pull=selected.internal_billet_transitions_per_pull if selected else 0,
         cuts_source=r.cuts_source,
         extrusion_time_per_billet_min=r.extrusion_time_per_billet_min,
         dead_time_sec=r.press.dead_time_sec,
@@ -860,11 +921,14 @@ def calculate(data: StudyInput) -> CalculationResult:
     swarf_puller = (p.saws.puller_mm / 1000.0) * kg_m_total * n_pulls
 
     final_cuts_total = 0
+    internal_transitions = billets - n_pulls if selected and selected.profiles_per_billet == 1 else 0
     if selected and selected.profiles_per_billet == 1 and selected_cuts >= 1:
         k = selected.billets_per_pull
         final_cuts_total = full_pulls * (selected_cuts * k + 1)
         if remaining_billets > 0:
             final_cuts_total += selected_cuts * remaining_billets + 1
+        if selected_front_scrap > 0:
+            final_cuts_total += internal_transitions
     elif selected and selected.profiles_per_billet == 2 and selected_cuts >= 1:
         final_cuts_total = 2 * billets * (selected_cuts + 1)
     swarf_final = (p.saws.final_mm / 1000.0) * kg_m_total * final_cuts_total
@@ -1036,6 +1100,10 @@ def calculate(data: StudyInput) -> CalculationResult:
         good_kg_requested=good_req,
         good_kg_effective_target=good_effective,
         good_kg_manufactured=good_made,
+        final_saw_events=final_cuts_total,
+        internal_billet_transitions=internal_transitions,
+        puller_saw_events=n_pulls,
+        billet_saw_events=billets,
     )
     scrap_block = ScrapResult(
         start_kg=kg_start,
@@ -1078,7 +1146,7 @@ def calculate(data: StudyInput) -> CalculationResult:
     )
     process_block = ProcessTraceResult(
         butt_source=butt_source,
-        standard_front_scrap_m=data.front_scrap_m,
+        standard_front_scrap_m=data.front_scrap_m if data.front_scrap_m is not None else 0.0,
         multi_billet_front_scrap_m=multi_scrap,
         multi_billet_front_scrap_source=multi_scrap_source,
         applied_front_scrap_m=selected_front_scrap,
@@ -1088,6 +1156,11 @@ def calculate(data: StudyInput) -> CalculationResult:
         supplement_10_pct=data.supplement_10_pct,
         supplement_factor=supplement_factor,
         target_productivity_source=target_source,
+        trim_total_per_billet_m=(selected.trim_total_per_billet_m if selected
+                                else data.trim_total_per_billet_m or 0.0),
+        trim_per_pull_m=selected.trim_per_pull_m if selected else 0.0,
+        trim_input_semantics=r.trim_input_semantics,
+        trim_topology=selected.trim_topology if selected else "unresolved",
     )
 
     valid_names = tuple(dict.fromkeys(cfg.name for cfg in valid))
