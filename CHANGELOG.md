@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.19.0 — UNRELEASED CANDIDATE
+
+- Adds canonical `trim_total_per_billet_m`: the total industrial reject reserve per incoming billet, divided across sequential pulls. It is not a predicted charge-weld length.
+- Preserves legacy `front_scrap_m` interpretation (per billet for p=1, per sequential pull for p=2), adds explicit `migrate_legacy_trim`, and rejects ambiguous canonical/legacy combinations. Omitted legacy values now serialize as null; no-input trim remains zero.
+- Corrects positive-trim multibillet geometry and final-saw accounting: each actual billet contribution requires `cuts + 1` transverse final-saw events, including a partial last pull. Puller kerf is shared once per pull. Zero trim retains the existing single end-preparation allowance per pull.
+- Separates commercial positions from public final-saw, internal-transition, puller-saw and billet-saw counters. JSON schema 1.1 remains additive; the canonical field itself identifies semantics.
+- Extra downstream kerf propagates through billet length, physical loss, extrusion time and productivity. Press dead-time events, butt physics and engineering equations are unchanged; mechanical propagation uses only the changed billet length.
+- Adds synthetic public topology, migration, partial-pull and boundary regressions, and an independent physical ledger. Plant-derived acceptance data remain outside the public repository and distributions. Public docs explain topology, legacy migration and model limits.
+- Local candidate only. No tag, push, package upload or release is authorized.
+
 ## 0.18.0
 
 - Corrects physical butt semantics: `butt_mm` remains residual thickness inside the container; butt mass uses density and container area, then converts once to equivalent incoming-billet length.

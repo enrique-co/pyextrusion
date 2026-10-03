@@ -29,7 +29,7 @@ def _physical_extruded_mass(result):
 def test_one_pull_kerfs_are_reserved_in_billet_and_extrusion_time():
     r = calculate_simple(
         _press(),
-        linear_weight_kg_m=0.819,
+        linear_weight_kg_m=0.93,
         exits=2,
         profile_type="solid",
         exit_speed_m_min=24,
@@ -47,7 +47,7 @@ def test_one_pull_kerfs_are_reserved_in_billet_and_extrusion_time():
     billet_useful_mass = r.billet_useful_length_mm * r.billet.kg_per_mm * r.billets
     assert billet_useful_mass == pytest.approx(physical_mass)
 
-    physical_length_m = physical_mass / (0.819 * 2)
+    physical_length_m = physical_mass / (0.93 * 2)
     assert r.timing.extrusion_total_min == pytest.approx(
         physical_length_m / r.exit_speed_m_min
     )
@@ -56,7 +56,7 @@ def test_one_pull_kerfs_are_reserved_in_billet_and_extrusion_time():
 def test_raw_material_closes_for_one_pull_including_butt_and_billet_saw():
     r = calculate_simple(
         _press(),
-        linear_weight_kg_m=0.819,
+        linear_weight_kg_m=0.93,
         exits=2,
         profile_type="solid",
         exit_speed_m_min=24,
@@ -79,7 +79,7 @@ def test_raw_material_closes_for_one_pull_including_butt_and_billet_saw():
 def test_zero_downstream_kerfs_add_no_physical_length():
     r = calculate_simple(
         _press(saws=SawSpec(0, 0, 0)),
-        linear_weight_kg_m=0.819,
+        linear_weight_kg_m=0.93,
         exits=2,
         profile_type="solid",
         exit_speed_m_min=24,
@@ -91,7 +91,7 @@ def test_zero_downstream_kerfs_add_no_physical_length():
     )
 
     expected_segment_m = 7 * 7 + 2
-    expected_useful_mm = (0.819 * 2 * expected_segment_m) / r.billet.kg_per_mm
+    expected_useful_mm = (0.93 * 2 * expected_segment_m) / r.billet.kg_per_mm
     assert r.billet_useful_length_mm == pytest.approx(expected_useful_mm)
     assert r.scrap.puller_saw_kg == 0
     assert r.scrap.final_saw_kg == 0
@@ -174,7 +174,7 @@ def test_partial_multi_billet_pull_uses_exact_order_time_and_warns_about_shared_
 def test_startup_and_complexity_remain_modeled_allowances_not_physical_extruded_mass():
     r = calculate_simple(
         _press(),
-        linear_weight_kg_m=0.819,
+        linear_weight_kg_m=0.93,
         exits=2,
         profile_type="solid",
         exit_speed_m_min=24,

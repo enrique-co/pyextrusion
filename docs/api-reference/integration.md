@@ -1,4 +1,6 @@
-# PyExtrusion integration guide — 0.18.0
+# PyExtrusion integration guide — 0.19.0 UNRELEASED CANDIDATE
+
+New inputs should use `trim_total_per_billet_m`. Examples retaining `front_scrap_m` below deliberately demonstrate the legacy contract (p=1 per billet, p=2 per pull). Canonical and non-null legacy inputs cannot be combined. See [explicit migration and public event counters](../user-guide/trim-topology.md).
 
 PyExtrusion exposes one deterministic direct-extrusion engine through Python objects, JSON files and CLI commands. The calculations use the current PyExtrusion engine.
 
@@ -74,7 +76,7 @@ It never reduces cuts merely to fit more billets on the table.
 
 The multi-billet family is `k_billets_1_profile`; `k` is dynamic and may be greater than 3. The reverse case is deliberately limited: `1_billet_2_profiles` is supported, but 3+ profiles per billet are reported as unsupported.
 
-For a multi-billet continuous pull, puller and final-saw operations are counted per pull. A final partial pull is modelled when the order billet count is not a multiple of `billets_per_pull`.
+For positive-trim multibillet continuous pulls, each actual billet contribution requires `cuts + 1` final-saw events, while the puller event is shared once per pull. A final partial pull uses its actual billet count: internal transitions are `N_B - N_pulls`, not nominal full-pull capacity. Zero trim retains one end-preparation allowance per actual pull plus the commercial positions.
 
 ## 4. Planning API — quantity-free process architecture
 

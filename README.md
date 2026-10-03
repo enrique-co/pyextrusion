@@ -8,7 +8,9 @@
 
 **Engineering calculation toolkit for aluminium extrusion**
 
-Current release: **0.18.0**.
+Local version: **0.19.0 — UNRELEASED CANDIDATE**. Based on official v0.18.0, commit `6677ebf170c9a1d46cc3b5b5b52de35c3c9e56de`. This checkout is not a published release.
+
+0.19.0 adds `trim_total_per_billet_m`, explicit legacy migration, and corrected positive-trim multibillet final-saw events, including partial pulls. Read the [trim contract and migration guide](docs/user-guide/trim-topology.md) before migrating sequential-pull data. Examples below retaining `front_scrap_m` deliberately use the legacy contract; do not mechanically rename it in p=2 data.
 
 Version 0.18.0 corrects `butt_mm` as physical residual thickness inside the container: butt mass uses the container section, then converts once to incoming-billet equivalent length. Existing physical mm inputs and the measured incoming-billet coefficient override remain supported. Calculated lengths, losses and feasibility may differ from 0.17.0; see the [changelog](CHANGELOG.md).
 
@@ -37,16 +39,16 @@ PyExtrusion includes a source-traced engineering layer, basic deterministic econ
 
 ## Installation
 
-From PyPI:
+Published baseline from PyPI (not this local candidate):
 
 ```bash
-python -m pip install pyextrusion
+python -m pip install pyextrusion==0.18.0
 ```
 
-From a local release wheel:
+From the locally built candidate wheel (not uploaded):
 
 ```bash
-python -m pip install pyextrusion-0.18.0-py3-none-any.whl
+python -m pip install pyextrusion-0.19.0-py3-none-any.whl
 ```
 
 ## Quick calculation

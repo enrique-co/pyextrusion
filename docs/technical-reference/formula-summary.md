@@ -66,6 +66,14 @@ M_{billet\ saw}=C_{B,effective} k_{billet}
 
 ### Nominal gross productivity
 
+Before calculating mass/time, positive-trim geometry uses:
+
+\[
+L_{pull}=\sum_j[n_{c,j}L_c+d_j+(n_{c,j}+1)k_f]+k_{puller}
+\]
+
+For common commercial positions `n_c`, `N_final = p N_B(n_c+1)`. For p=1, `N_internal = N_B - N_pulls` and `N_final = N_B n_c + N_pulls + N_internal`. Actual partial groups matter. See [trim topology](../user-guide/trim-topology.md) for the separate zero-trim convention. Saw events are not multiplied by simultaneous exits; mass uses combined linear weight.
+
 \[
 Q_{gross,nominal}
 =

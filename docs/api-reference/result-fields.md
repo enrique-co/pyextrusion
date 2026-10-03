@@ -1,6 +1,6 @@
 # Result field glossary
 
-The PyExtrusion 0.18.0 release candidate exposes the following documented structured production result fields. Use the exact dotted paths with `result.value()`, `result.select()`, or the CLI field commands. The three new butt/coefficient trace fields are always populated by the engine; `None` preserves manual construction of legacy result objects. Engineering and Economics use their own result objects, documented in their API reference pages.
+PyExtrusion 0.19.0 — UNRELEASED CANDIDATE. These are the exact structured production result paths for `result.value()`, `result.select()` and the CLI. Trim/event fields are additive. See [trim topology and legacy migration](../user-guide/trim-topology.md) for canonical units, retained compatibility names, partial pulls and commercial positions versus physical events. Engineering and Economics expose their own result objects.
 
 | Field | Unit | Type | Description |
 |---|---|---|---|
@@ -39,12 +39,16 @@ The PyExtrusion 0.18.0 release candidate exposes the following documented struct
 | `billet.butt_mm` | mm | `float` | Physical residual butt thickness inside the container, not incoming-billet length. |
 | `billet.butt_source` | text | `str` | Origin of butt value: default_rule or user_override. |
 | `billet.kg_per_mm` | kg/mm | `float` | Billet mass coefficient derived from actual billet geometry/density or supplied override. |
-| `billet.butt_mass_kg` | kg/billet | `float` or `None` | One physical butt: density times container area times physical thickness in metres. |
-| `billet.butt_equivalent_billet_mm` | mm | `float` or `None` | Physical butt mass divided by the effective incoming-billet kg/mm coefficient. |
-| `billet.mass_coefficient_source` | text | `str` or `None` | Incoming-billet coefficient source: geometric or user_plant_override. |
+| `billet.butt_mass_kg` | kg/billet | `float | None` | One physical butt: density times container area times physical thickness in metres. |
+| `billet.butt_equivalent_billet_mm` | mm | `float | None` | Physical butt mass divided by the effective incoming-billet kg/mm coefficient. |
+| `billet.mass_coefficient_source` | text | `str | None` | Incoming-billet coefficient source: geometric or user_plant_override. |
 | `production.profiles_per_billet` | profiles/billet | `int` | Complete sequential pulls produced by one billet; maximum supported value is 2. |
 | `production.billets_per_pull` | billets/pull | `int` | Number of billets grouped into one continuous pull; dynamically limited by billet and table geometry. |
-| `production.cuts_per_pull` | count | `int` | Cuts represented by a complete pull. |
+| `production.cuts_per_pull` | count | `int` | Commercial positions represented by a complete pull; NOT physical final-saw events. |
+| `production.final_saw_events` | count | `int` | Transverse final-saw events for actual billet contributions; not multiplied by exits. |
+| `production.internal_billet_transitions` | count | `int` | Actual internal billet transitions; NB - Npulls for p=1, including a partial last pull. |
+| `production.puller_saw_events` | count | `int` | One puller-saw event per actual pull. |
+| `production.billet_saw_events` | count | `int` | One incoming billet-saw event per billet. |
 | `production.bars_per_pull` | bars/pull | `int` | Finished bars represented by a complete pull. |
 | `production.bars_per_billet` | bars/billet | `int` | Bars contributed by one billet: cuts × exits × profiles_per_billet. |
 | `production.billets` | count | `int` | Number of billets required after ceiling to whole billets. |
@@ -64,7 +68,7 @@ The PyExtrusion 0.18.0 release candidate exposes the following documented struct
 | `scrap.start_kg` | kg | `float` | Start-up scrap from the documented PyExtrusion startup-length rule. |
 | `scrap.complexity_kg` | kg | `float` | Complexity allowance mass: normal 3%, medium 5%, high 7%. |
 | `scrap.butt_kg` | kg | `float` | Scrap mass corresponding to billet butt discard. |
-| `scrap.front_scrap_kg` | kg | `float` | Scrap mass corresponding to applied front scrap. |
+| `scrap.front_scrap_kg` | kg | `float` | Compatibility name for total trim/reject reserve mass, not only leading trim or a predicted charge-weld length. |
 | `scrap.billet_saw_kg` | kg | `float` | Billet-saw kerf loss; zero when billet kerf is 0 mm. |
 | `scrap.puller_saw_kg` | kg | `float` | Puller-saw kerf loss; zero when puller kerf is 0 mm. |
 | `scrap.final_saw_kg` | kg | `float` | Final-saw kerf loss; zero when final kerf is 0 mm. |
@@ -95,10 +99,14 @@ The PyExtrusion 0.18.0 release candidate exposes the following documented struct
 | `timing.cycle_per_billet_min` | min/billet | `float` | Average total cycle time per billet. |
 | `timing.total_hours` | h | `float` | Total production time expressed in hours. |
 | `process.butt_source` | text | `str` | Trace value describing the source of the butt length. |
-| `process.standard_front_scrap_m` | m | `float` | Standard front-scrap input supplied for the study. |
-| `process.multi_billet_front_scrap_m` | m/billet | `float` | Front-scrap value available for multi-billet configurations. |
+| `process.standard_front_scrap_m` | m/contribution | `float` | Explicit legacy standard trim input; zero when absent, NOT the canonical total. |
+| `process.multi_billet_front_scrap_m` | m/billet | `float` | Compatibility trace of the reserve available to the p=1 multibillet candidate. |
 | `process.multi_billet_front_scrap_source` | text | `str` | Origin of the multi-billet front-scrap value. |
-| `process.applied_front_scrap_m` | m/billet | `float` | Front-scrap value actually used by the recommended configuration. |
+| `process.applied_front_scrap_m` | m/contribution | `float` | Legacy projection: trim per billet contribution to one pull; for p=2 this is HALF the total per billet. |
+| `process.trim_total_per_billet_m` | m/billet | `float` | Total trim/reject reserve per incoming billet across all its sequential pulls. |
+| `process.trim_per_pull_m` | m/pull | `float` | Total trim on one FULL pull; partial pull uses only its actual contributions. |
+| `process.trim_input_semantics` | text | `str` | Canonical total per incoming billet, explicit legacy interpretation, or default zero. |
+| `process.trim_topology` | text | `str` | Positive distributed reject boundaries or zero-trim end-allowance convention. |
 | `process.applied_front_scrap_source` | text | `str` | Origin of the front-scrap value actually used. |
 | `process.cuts_source` | text | `str` | Whether cuts were selected automatically or supplied by the user. |
 | `process.speed_input_source` | text | `str` | Speed input used to resolve the process: exit_speed_user_value or ram_speed_user_value. |

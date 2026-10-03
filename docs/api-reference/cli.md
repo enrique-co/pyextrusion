@@ -2,6 +2,8 @@
 
 PyExtrusion includes a CLI for engineers, scripts and AI/tool integrations.
 
+The 0.19.0 candidate accepts canonical trim through the same input JSON used by `calculate`, `plan`, comparisons and sequences. Use `--field process.trim_total_per_billet_m` or `--field production.final_saw_events` for the new traces. Commercial cuts are not physical final-saw events. Legacy inputs retain their original per-pull interpretation for p=2; [migrate explicitly with the Python helper](../user-guide/trim-topology.md#legacy-api-and-json-migration).
+
 ## Identity and version
 
 ```bash

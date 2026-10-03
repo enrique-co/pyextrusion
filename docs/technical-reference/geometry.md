@@ -225,6 +225,8 @@ Several billets may contribute to one continuous pull when the process geometry 
 
 ## Supported production geometry
 
+Canonical trim is a total per incoming billet, distributed across its sequential pulls. For positive trim, a billet contribution with `n_c` commercial positions occupies `n_c L_c + d + (n_c+1) k_f`; add the puller kerf once per actual pull. Full-precision geometry governs table and billet constraints. See [trim topology and migration](../user-guide/trim-topology.md) for physical boundaries and partial pulls.
+
 PyExtrusion currently supports two public production families.
 
 ### One or more billets contributing to one continuous pull

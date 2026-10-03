@@ -47,6 +47,8 @@ You can supply one of these as the process speed input. PyExtrusion resolves the
 
 ### 5. Cuts and table occupancy
 
+These cuts are commercial positions, not total physical saw strokes. Inspect `production.final_saw_events`, `internal_billet_transitions`, `puller_saw_events` and `billet_saw_events` separately. See [trim topology](trim-topology.md) for partial-pull counting.
+
 Important values include:
 
 - theoretical cuts;

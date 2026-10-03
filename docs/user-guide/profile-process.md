@@ -62,7 +62,7 @@ from pyextrusion import Process
 process = Process(
     exit_speed_m_min=24,
     cut_length_mm=7000,
-    front_scrap_m=2,
+    trim_total_per_billet_m=2,
     complexity="normal",
 )
 ```
@@ -71,11 +71,13 @@ process = Process(
 
 - exit/profile speed;
 - cut length;
-- front scrap;
+- total trim/reject reserve per incoming billet (`trim_total_per_billet_m`);
 - complexity;
 - optional manual number of cuts;
 - optional butt override (`butt_mm`: physical residual thickness inside the container);
-- optional special multi-billet front scrap.
+- explicit legacy front-scrap inputs for older data only; do not combine with canonical trim.
+
+See [trim topology and legacy migration](trim-topology.md). In particular, a synthetic legacy `front_scrap_m=0.6` with two sequential pulls becomes canonical total `1.2`, not `0.6`.
 
 The butt input and plant butt rules retain physical mm values. Defaults remain 15 mm for solid/plate and 20 mm for hollow/tubular. No numeric input migration is required. The engine converts butt mass to an equivalent incoming-billet length internally, once. The v0.18.0 correction can change calculated lengths, losses and discrete feasibility compared with earlier calculations, which used the incoming-billet section for the butt.
 
@@ -85,7 +87,7 @@ The butt input and plant butt rules retain physical mm values. Defaults remain 1
 |---|---|
 | Cut length | 1000 to 15000 mm |
 | Exit/profile speed | 1 to 100 m/min |
-| Front scrap | 0 or more; must remain compatible with table length |
+| Total trim per billet | Finite and nonnegative; geometry is checked after distribution across pulls |
 | Complexity | `normal`, `medium`, `high` |
 
 PyExtrusion never guesses units. For example:
@@ -104,7 +106,7 @@ If your plant works naturally with ram speed, you can provide it as the speed in
 process = Process.from_ram_speed(
     ram_speed_mm_s=0.70,
     cut_length_mm=7000,
-    front_scrap_m=2,
+    trim_total_per_billet_m=2,
     complexity="normal",
 )
 ```

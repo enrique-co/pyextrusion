@@ -1,12 +1,11 @@
 cff-version: 1.2.0
-message: "If you use PyExtrusion in research, technical publications, or documented engineering work, please cite the software using the metadata below."
+message: "UNRELEASED CANDIDATE 0.19.0. Local validation only; no release date or published tag is claimed."
 title: "PyExtrusion"
 type: software
 authors:
   - family-names: "Calvo Ordonez"
     given-names: "Enrique"
-version: 0.18.0
-date-released: 2026-09-29
+version: 0.19.0
 url: "https://pyextrusion.com"
 license: Apache-2.0
 abstract: "PyExtrusion is a configurable Python toolkit for deterministic aluminium extrusion engineering calculations."

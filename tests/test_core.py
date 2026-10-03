@@ -200,10 +200,10 @@ def test_multi_billet_front_scrap_recalculates_billet_geometry():
     cfg = next(c for c in r.configurations if c.name == "k_billets_1_profile")
     nominal_segment = r.cuts * 7.0 + 1.0
     final_kerf_m = p.saws.final_mm / 1000.0
-    shared_kerf_m = (p.saws.puller_mm + p.saws.final_mm) / 1000.0
+    shared_kerf_m = p.saws.puller_mm / 1000.0
     expected_physical_per_billet = (
         nominal_segment
-        + r.cuts * final_kerf_m
+        + (r.cuts + 1) * final_kerf_m
         + shared_kerf_m / cfg.billets_per_pull
     )
     expected_useful = 4.0 * expected_physical_per_billet / 0.087
@@ -590,8 +590,8 @@ def test_v080_unknown_case_adjustment_has_px1010():
 def test_v080_field_glossary_is_complete_and_describable():
     from pyextrusion import list_fields, describe_field, FIELD_GLOSSARY
     fields = list_fields()
-    assert len(fields) == 101
-    assert len(FIELD_GLOSSARY) == 101
+    assert len(fields) == 109
+    assert len(FIELD_GLOSSARY) == 109
     assert {"billet.butt_mass_kg", "billet.butt_equivalent_billet_mm", "billet.mass_coefficient_source"} <= {field.path for field in fields}
     info = describe_field("scrap.total_kg")
     assert info.unit == "kg"
