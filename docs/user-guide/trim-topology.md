@@ -15,6 +15,15 @@ process = Process(18, 4000, cuts=3, butt_mm=25,
                   trim_total_per_billet_m=1.2)
 ```
 
+## Contribution versus full-pull output
+
+```text
+trim_per_contribution = trim_total_per_billet_m / profiles_per_billet
+trim_per_pull_m = billets_per_pull * trim_per_contribution
+```
+
+The second expression describes the **full-pull result field**, not a second input. In p=1 multibillet operation it includes all k billets; in p=2 sequential operation k=1 and it is half the billet total. A final partial pull with r billets contains only r contributions. Do not multiply the full-pull field by all pulls to reconstruct an order with a partial group.
+
 ## Physical diagrams and final-saw boundaries
 
 For positive reject reserve, each billet commercial block has half of its allocated trim before it and half after it. `|` below denotes a final-saw event; the block includes one kerf between each adjacent commercial bar.
@@ -93,10 +102,16 @@ JSON remains additive schema `1.1`; the canonical field itself identifies the ne
 
 Python and JSON expose `process.trim_total_per_billet_m`, `process.trim_per_pull_m` (full pull), `process.trim_input_semantics`, and `process.trim_topology`. Quantity-free process/configuration results also expose per-full-pull final-event and internal-transition counts. Order results expose:
 
-- `production.final_saw_events`;
-- `production.internal_billet_transitions`;
-- `production.puller_saw_events`;
-- `production.billet_saw_events`.
+| Order field | Meaning |
+|---|---|
+| `production.final_saw_events` | Actual transverse final-saw events across all exits |
+| `production.internal_billet_transitions` | N_B−N_pulls for p=1; zero for p=2 |
+| `production.puller_saw_events` | One event per actual pull |
+| `production.billet_saw_events` | One upstream event per incoming billet |
+
+With positive trim, `N_final = p * N_B * (n_cuts + 1)`. With zero trim, `N_final = p * N_B * n_cuts + N_pulls`. For p=2 there are two pulls per billet and these counts coincide; their trim policies do not.
+
+The quantity-free per-pull counters describe a full pull and cannot replace actual-order counters when the last pull is partial.
 
 `cuts`/`cuts_per_pull` are commercial positions, not physical event totals. Compatibility names `front_scrap_per_billet_m` and `applied_front_scrap_m` project the reserve per contribution to one pull; for p=2 they are half the total per billet. `front_scrap_kg` already means the whole order's rejected mass. Legacy `standard_front_scrap_m` is zero when no legacy input is present; it is not the canonical total.
 

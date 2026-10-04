@@ -12,6 +12,12 @@ PyExtrusion returns many fields because different users need different views. Yo
 
 This chapter explains the main result families in practical terms.
 
+## Trim and event scope
+
+`process.trim_total_per_billet_m` is the incoming-billet total, not front-only scrap or predicted charge-weld extent. Each sequential contribution receives that total divided by p. `process.trim_per_pull_m` sums contributions for a **full** pull. It can therefore include several billets.
+
+Use the four `production` event counters for an actual order, including its partial final group. For a quantity-free `ProcessResult`, the two `*_per_pull` counters describe full-pull configuration only. A kerf of zero does not remove the event, but its length/mass loss is zero.
+
 ### 1. Supported and viable
 
 Read these first.
@@ -84,7 +90,7 @@ One pull can contain material from more than one billet in a multi-billet contin
 PyExtrusion reports individual and grouped losses, including categories such as:
 
 - butt;
-- front scrap;
+- total trim/reject reserve (`scrap.front_scrap_kg` retains its compatibility name);
 - billet saw;
 - puller saw;
 - final saw;
@@ -132,7 +138,7 @@ Always read it together with:
 
 The current technical press time includes the extrusion time and the technical dead time modeled by PyExtrusion.
 
-It does not automatically include external delays between production orders.
+Additional downstream kerf increases physical extrusion length and time. It does not add a separate saw-operation duration or a new press dead-time event. The model also does not automatically include external delays between production orders.
 
 ### 12. Warnings
 

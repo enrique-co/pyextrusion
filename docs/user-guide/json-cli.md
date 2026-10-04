@@ -2,6 +2,8 @@
 
 PyExtrusion can be used without writing a full Python application.
 
+Use the [canonical JSON examples](../api-reference/json.md) for 0.19.0. `trim_total_per_billet_m` is total rejection per incoming billet. Legacy files retain their old meaning and require [explicit Python migration](trim-topology.md#legacy-api-and-json-migration), not just renaming a key. Canonical trim plus any non-null legacy trim (including zero) is rejected.
+
 ### Command line identity
 
 ```bash
@@ -30,6 +32,14 @@ JSON output:
 ```bash
 pyextrusion calculate case.json --press press.json --format json --pretty
 ```
+
+Inspect actual-order events separately from commercial cuts:
+
+```bash
+pyextrusion calculate case.json --press press.json --fields geometry.cuts production.final_saw_events production.internal_billet_transitions production.puller_saw_events production.billet_saw_events --format json --pretty
+```
+
+These selectors belong to `calculate`. In planning JSON, order counters are in `calculation.production`, when a concrete calculation exists.
 
 ### Planning from the CLI
 

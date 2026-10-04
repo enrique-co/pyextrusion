@@ -2,6 +2,12 @@
 
 `Process`, `Production` and `calculate_simple` accept canonical `trim_total_per_billet_m`. Use `migrate_legacy_trim(case, profiles_per_billet=2)` for a verified legacy two-pull case. Non-null legacy/canonical combinations are rejected. See [trim contract, migration and public counters](../user-guide/trim-topology.md).
 
+## Explicit legacy migration
+
+`migrate_legacy_trim(case, *, profiles_per_billet, use_multi_billet_override=None)` accepts a StudyCase or PlanningCase. Supply the **verified** legacy p=1 or p=2 family; the helper does not infer it. If a legacy multibillet override is present, explicitly choose whether it was applied. True requires an existing override and p=1. The helper clears both legacy fields and returns a new immutable case; already canonical inputs are rejected.
+
+Recalculate on the intended press after migration. Loading an old file or choosing a different press does not guarantee the same automatic family. A canonical value together with a non-null legacy value, even 0.0, is an ambiguity error. Omitted trim means zero.
+
 ## Main objects
 
 ```python
@@ -56,6 +62,12 @@ result.billet.recommended_length_mm
 result.production.bars_per_billet
 result.production.bars_per_pull
 result.production.n_pulls
+result.production.final_saw_events
+result.production.internal_billet_transitions
+result.production.puller_saw_events
+result.production.billet_saw_events
+result.process.trim_total_per_billet_m
+result.process.trim_per_pull_m
 result.scrap.fixed_pct
 result.productivity.real_net_kg_h
 result.productivity.productivity_index
@@ -135,9 +147,13 @@ process.extrusion_ratio
 process.exit_speed_m_min
 process.ram_speed_mm_s
 process.extrusion_time_per_billet_min
+process.trim_total_per_billet_m
+process.trim_per_pull_m
+process.final_saw_events_per_pull
+process.internal_billet_transitions_per_pull
 ```
 
-`ProcessResult` contains no requested bars, billets, kg or time window.
+`ProcessResult` contains no requested bars, billets, kg or time window. Its trim/event-per-pull fields refer to the full-pull configuration, not a possible last partial pull. In a planning result use `plan.calculation.production` for order counters when `plan.calculation` is not None.
 
 ## Planning
 
@@ -260,7 +276,7 @@ The new comparison APIs require at least two presses, preserve press order, use 
 
 Advanced analytical helpers live in `pyextrusion.engineering`. See the
 [Engineering API](engineering.md) for complete mechanical and thermal examples
-using the public 0.18.0 interface.
+using the public 0.19.0 interface.
 
 Deterministic production-cost and sales-margin calculations live in
 `pyextrusion.economics`. See the [Economics API](economics.md).

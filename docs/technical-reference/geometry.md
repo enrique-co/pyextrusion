@@ -24,7 +24,8 @@ with \(D_c\) converted to metres when \(A_c\) is required in m².
 PyExtrusion uses the **container bore area** for:
 
 - extrusion ratio;
-- ram/extrusion speed relationship.
+- ram/extrusion speed relationship;
+- physical butt mass.
 
 ### Actual billet area
 
@@ -181,7 +182,7 @@ Here `C_B,effective` is the incoming-billet mass coefficient in kg/mm: geometry/
 L_{billet}=\frac{M_{extruded}}{C_{B,effective}}+L_{butt,eq}
 \]
 
-The through-die mass includes good product, front discard and downstream kerfs. The butt is added **once per billet**, including one billet producing two sequential pulls. Billet-saw loss is upstream and remains `C_B,effective * billet_saw_mm` per billet.
+The through-die mass includes good product, total trim/reject reserve and downstream kerfs. The butt is added **once per billet**, including one billet producing two sequential pulls. Billet-saw loss is upstream and remains `C_B,effective * billet_saw_mm` per billet.
 
 The existing volume-based upsetting relation is unchanged:
 
@@ -212,7 +213,7 @@ A useful simple geometric reference is the number of whole finished lengths that
 n_{theoretical} = \left\lfloor\frac{L_{table}}{L_{cut}}\right\rfloor
 \]
 
-The actual calculated production arrangement may be lower because it must also respect billet limits, front scrap and the supported production geometry.
+The actual calculated production arrangement may be lower because it must also respect billet limits, total trim, downstream saw kerfs and the supported production geometry.
 
 ### Pull
 
@@ -225,7 +226,7 @@ Several billets may contribute to one continuous pull when the process geometry 
 
 ## Supported production geometry
 
-Canonical trim is a total per incoming billet, distributed across its sequential pulls. For positive trim, a billet contribution with `n_c` commercial positions occupies `n_c L_c + d + (n_c+1) k_f`; add the puller kerf once per actual pull. Full-precision geometry governs table and billet constraints. See [trim topology and migration](../user-guide/trim-topology.md) for physical boundaries and partial pulls.
+Canonical trim is a total per incoming billet, distributed across its sequential pulls: `d = trim_total_per_billet_m / p`. This d is a per-contribution length; the result `trim_per_pull_m` sums the contributions of the full pull. For positive trim, a billet contribution with `n_c` commercial positions occupies `n_c L_c + d + (n_c+1) k_f`; add the puller kerf once per actual pull. Full-precision geometry governs table and billet constraints. See [trim topology and migration](../user-guide/trim-topology.md) for physical boundaries and partial pulls.
 
 PyExtrusion currently supports two public production families.
 

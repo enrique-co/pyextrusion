@@ -39,6 +39,17 @@ Correct:
 cut_length_mm=7000
 ```
 
+### Example: canonical trim combined with legacy zero
+
+Rejected as ambiguous:
+
+```python
+Process(exit_speed_m_min=24, cut_length_mm=7000,
+        trim_total_per_billet_m=2, front_scrap_m=0)
+```
+
+For a new canonical case, omit both legacy fields (or use None). For existing data, first verify the old family and [migrate explicitly](trim-topology.md#legacy-api-and-json-migration). There is no automatic precedence, and simply renaming front_scrap_m can halve the intended total for p=2.
+
 ### Example: fractional exits
 
 Invalid:

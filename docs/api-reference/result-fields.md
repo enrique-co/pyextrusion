@@ -6,9 +6,9 @@ PyExtrusion 0.19.0. These are the exact structured production result paths for `
 |---|---|---|---|
 | `status.viable` | bool | `bool` | Whether a supported configuration is physically viable for the press and process. |
 | `status.supported` | bool | `bool` | Whether the scenario is covered by the current PyExtrusion calculation model. |
-| `status.unsupported_reason` | text | `str|null` | Controlled explanation when the scenario is outside the supported model. |
-| `status.required_profiles_per_billet` | profiles/billet | `int|null` | Minimum profiles per billet detected when the case would require more than the supported maximum of two. |
-| `status.recommended_configuration` | text | `str|null` | Recommended supported configuration family after billet-first optimisation. |
+| `status.unsupported_reason` | text | `str or null` | Controlled explanation when the scenario is outside the supported model. |
+| `status.required_profiles_per_billet` | profiles/billet | `int or null` | Minimum profiles per billet detected when the case would require more than the supported maximum of two. |
+| `status.recommended_configuration` | text | `str or null` | Recommended supported configuration family after billet-first optimisation. |
 | `geometry.profile_section_per_exit_m2` | m² | `float` | Cross-sectional area of one profile exit. |
 | `geometry.profile_section_total_m2` | m² | `float` | Total profile cross-sectional area across all exits. |
 | `geometry.container_area_m2` | m² | `float` | Internal container-bore area used for extrusion ratio and ram-speed calculations. |
@@ -19,13 +19,13 @@ PyExtrusion 0.19.0. These are the exact structured production result paths for `
 | `geometry.ram_speed_m_min` | m/min | `float` | Ram speed from volume constancy using container-bore area. |
 | `geometry.ram_speed_mm_s` | mm/s | `float` | Ram speed expressed in millimetres per second. |
 | `geometry.theoretical_cuts` | count | `int` | Maximum theoretical cuts from table length before billet-limit optimisation. |
-| `geometry.cuts` | count | `int` | Cuts per billet selected by billet-first optimisation or supplied manually. |
+| `geometry.cuts` | count | `int` | Commercial positions per billet contribution to one pull and per exit; NOT all physical saw events. |
 | `geometry.cuts_per_pull` | count | `int` | Finished cut positions represented by the full pull geometry; for multi-billet this is cuts per billet × billets per pull. |
-| `geometry.billets_per_pull` | billets/pull | `int` | Billets combined into one continuous pull after billet-first optimisation. |
+| `geometry.billets_per_pull` | billets/pull | `int` | Billets in the selected full-pull configuration, resolved with physical trim/kerf occupancy. |
 | `geometry.profiles_per_billet` | profiles/billet | `int` | Sequential profiles produced by one billet; supported values are 1 or 2. |
 | `geometry.pull_length_m` | m | `float` | Total length extruded by one billet; retained as a flat compatibility field. |
-| `geometry.profile_pull_length_m` | m | `float` | Length of one complete pull/profile including applied front scrap. |
-| `geometry.extruded_length_per_billet_m` | m/billet | `float` | Total length extruded by one billet across sequential pulls. |
+| `geometry.profile_pull_length_m` | m | `float` | Compatibility field: net bars plus trim for one p=1 contribution (before kerfs); physical sequential pull length including kerfs for p=2. Use table_occupancy_length_m for full-pull occupancy. |
+| `geometry.extruded_length_per_billet_m` | m/billet | `float` | Representative physical length per billet for complete-pull geometry; not a separately adjusted last partial billet. |
 | `geometry.table_occupancy_length_m` | m | `float` | Runout-table length occupied by the recommended configuration. |
 | `geometry.configuration_total_length_m` | m | `float` | Total length represented by the recommended special configuration. |
 | `geometry.table_ratio` | ratio | `float` | Table occupancy divided by available table length. |
@@ -39,14 +39,14 @@ PyExtrusion 0.19.0. These are the exact structured production result paths for `
 | `billet.butt_mm` | mm | `float` | Physical residual butt thickness inside the container, not incoming-billet length. |
 | `billet.butt_source` | text | `str` | Origin of butt value: default_rule or user_override. |
 | `billet.kg_per_mm` | kg/mm | `float` | Billet mass coefficient derived from actual billet geometry/density or supplied override. |
-| `billet.butt_mass_kg` | kg/billet | `float | None` | One physical butt: density times container area times physical thickness in metres. |
-| `billet.butt_equivalent_billet_mm` | mm | `float | None` | Physical butt mass divided by the effective incoming-billet kg/mm coefficient. |
-| `billet.mass_coefficient_source` | text | `str | None` | Incoming-billet coefficient source: geometric or user_plant_override. |
+| `billet.butt_mass_kg` | kg/billet | `float or null` | One physical butt: density times container area times physical thickness in metres. |
+| `billet.butt_equivalent_billet_mm` | mm | `float or null` | Physical butt mass divided by the effective incoming-billet kg/mm coefficient. |
+| `billet.mass_coefficient_source` | text | `str or null` | Incoming-billet coefficient source: geometric or user_plant_override. |
 | `production.profiles_per_billet` | profiles/billet | `int` | Complete sequential pulls produced by one billet; maximum supported value is 2. |
 | `production.billets_per_pull` | billets/pull | `int` | Number of billets grouped into one continuous pull; dynamically limited by billet and table geometry. |
 | `production.cuts_per_pull` | count | `int` | Commercial positions represented by a complete pull; NOT physical final-saw events. |
 | `production.final_saw_events` | count | `int` | Transverse final-saw events for actual billet contributions; not multiplied by exits. |
-| `production.internal_billet_transitions` | count | `int` | Actual internal billet transitions; NB - Npulls for p=1, including a partial last pull. |
+| `production.internal_billet_transitions` | count | `int` | Actual internal transitions: NB - Npulls for p=1, including a partial last pull; zero for p=2. |
 | `production.puller_saw_events` | count | `int` | One puller-saw event per actual pull. |
 | `production.billet_saw_events` | count | `int` | One incoming billet-saw event per billet. |
 | `production.bars_per_pull` | bars/pull | `int` | Finished bars represented by a complete pull. |
@@ -78,20 +78,20 @@ PyExtrusion 0.19.0. These are the exact structured production result paths for `
 | `scrap.total_pct` | % | `float` | Total losses divided by manufactured good kilograms. |
 | `scrap.extruded_losses_kg` | kg | `float` | Losses counted as material that passed through the die for real productivity. |
 | `productivity.nominal_gross_kg_h` | kg/h | `float` | Nominal gross output from total linear weight × exit speed × 60. |
-| `productivity.real_gross_kg_h` | kg/h | `float` | Real gross extruded output divided by total elapsed hours. |
-| `productivity.real_net_kg_h` | kg/h | `float` | Manufactured good kilograms divided by total elapsed hours. |
+| `productivity.real_gross_kg_h` | kg/h | `float` | Real gross extruded output divided by modeled technical press hours. |
+| `productivity.real_net_kg_h` | kg/h | `float` | Manufactured good kilograms divided by modeled technical press hours. |
 | `productivity.extruded_total_kg` | kg | `float` | Manufactured good mass plus losses that passed through the die. |
-| `productivity.target_net_kg_h` | kg/h | `float|null` | Press reference net productivity supplied by the user or inferred by the PyExtrusion nominal-size heuristic. |
+| `productivity.target_net_kg_h` | kg/h | `float or null` | Press reference net productivity supplied by the user or inferred by the PyExtrusion nominal-size heuristic. |
 | `productivity.target_source` | text | `str` | Origin of target productivity: user_value, inferred_from_nominal_size, or unavailable. |
-| `productivity.ratio` | ratio | `float|null` | Real net productivity divided by press reference target. |
-| `productivity.delta_kg_h` | kg/h | `float|null` | Informative real-net minus target productivity delta. |
-| `productivity.deficit_pct` | % | `float|null` | Relative productivity deficit: max(0, (1-ratio)×100). |
-| `productivity.relative_score` | score | `float|null` | Relative productivity score capped at 100. |
-| `productivity.fixed_scrap_score` | score | `float|null` | Fixed-scrap score used internally by the productivity index. |
-| `productivity.penalty_points` | points | `float|null` | Percentage-based infraproductivity penalty used by the productivity index. |
-| `productivity.productivity_index` | score | `float|null` | 0-100 orientative industrial-capacity utilisation index; not a definitive decision criterion. |
-| `productivity.productivity_index_rating` | text | `str|null` | Orientative rating: very_favorable, favorable, acceptable, unfavorable, or highly_penalized. |
-| `timing.extrusion_per_billet_min` | min | `float` | Extrusion time for one billet from actual extruded length and exit speed. |
+| `productivity.ratio` | ratio | `float or null` | Real net productivity divided by press reference target. |
+| `productivity.delta_kg_h` | kg/h | `float or null` | Informative real-net minus target productivity delta. |
+| `productivity.deficit_pct` | % | `float or null` | Relative productivity deficit: max(0, (1-ratio)×100). |
+| `productivity.relative_score` | score | `float or null` | Relative productivity score capped at 100. |
+| `productivity.fixed_scrap_score` | score | `float or null` | Fixed-scrap score used internally by the productivity index. |
+| `productivity.penalty_points` | points | `float or null` | Percentage-based infraproductivity penalty used by the productivity index. |
+| `productivity.productivity_index` | score | `float or null` | 0-100 orientative industrial-capacity utilisation index; not a definitive decision criterion. |
+| `productivity.productivity_index_rating` | text | `str or null` | Orientative rating: very_favorable, favorable, acceptable, unfavorable, or highly_penalized. |
+| `timing.extrusion_per_billet_min` | min | `float` | Actual order extrusion time divided by billet count; may differ from the quantity-free full-pull representative time. |
 | `timing.extrusion_total_min` | min | `float` | Total extrusion time for all billets. |
 | `timing.dead_time_events` | count | `int` | Number of technical dead-time events used by the selected configuration. |
 | `timing.dead_time_total_min` | min | `float` | Total technical dead time. |
@@ -104,7 +104,7 @@ PyExtrusion 0.19.0. These are the exact structured production result paths for `
 | `process.multi_billet_front_scrap_source` | text | `str` | Origin of the multi-billet front-scrap value. |
 | `process.applied_front_scrap_m` | m/contribution | `float` | Legacy projection: trim per billet contribution to one pull; for p=2 this is HALF the total per billet. |
 | `process.trim_total_per_billet_m` | m/billet | `float` | Total trim/reject reserve per incoming billet across all its sequential pulls. |
-| `process.trim_per_pull_m` | m/pull | `float` | Total trim on one FULL pull; partial pull uses only its actual contributions. |
+| `process.trim_per_pull_m` | m/pull | `float` | Full-pull total: billets_per_pull × (trim_total_per_billet_m / profiles_per_billet); a partial pull uses only actual contributions. |
 | `process.trim_input_semantics` | text | `str` | Canonical total per incoming billet, explicit legacy interpretation, or default zero. |
 | `process.trim_topology` | text | `str` | Positive distributed reject boundaries or zero-trim end-allowance convention. |
 | `process.applied_front_scrap_source` | text | `str` | Origin of the front-scrap value actually used. |
@@ -113,3 +113,11 @@ PyExtrusion 0.19.0. These are the exact structured production result paths for `
 | `process.supplement_10_pct` | bool | `bool` | Whether the explicit 10% demand supplement was enabled. |
 | `process.supplement_factor` | factor | `float` | Demand multiplier applied by the supplement rule. |
 | `process.target_productivity_source` | text | `str` | Trace source for the press productivity target. |
+
+## Quantity-free versus order-level results
+
+The table above describes `CalculationResult` paths. A quantity-free `ProcessResult` instead exposes `trim_total_per_billet_m`, `trim_per_pull_m`, `trim_input_semantics`, `trim_topology`, `final_saw_events_per_pull` and `internal_billet_transitions_per_pull` directly. The per-pull fields refer to a complete pull, not an actual-order total.
+
+With positive trim, a full pull has k×(cuts+1) final events. With zero trim it has k×cuts+1. The internal transition count is max(k−1,0). Kerf zero does not zero these counters. See [trim topology](../user-guide/trim-topology.md).
+
+In `PlanningResult`, quantity-free fields are under `process`, while order counters are under `calculation.production`. Check that `calculation` is not null before using them.

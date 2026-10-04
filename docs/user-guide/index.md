@@ -55,11 +55,12 @@ Start with installation, then follow the path that matches your task.
 1. [Installation and first steps](getting-started.md)
 2. [Define a press](press.md)
 3. [Define a profile and process](profile-process.md)
-4. [Calculate a process](calculate-process.md)
-5. [Plan one production order](planning.md)
-6. [Calculate a sequence of orders](production-sequences.md)
-7. [Compare presses](compare-presses.md)
-8. [Understand the results](understand-results.md)
+4. [Trim topology and legacy migration](trim-topology.md)
+5. [Calculate a process](calculate-process.md)
+6. [Plan one production order](planning.md)
+7. [Calculate a sequence of orders](production-sequences.md)
+8. [Compare presses](compare-presses.md)
+9. [Understand the results](understand-results.md)
 
 ### Engineering
 

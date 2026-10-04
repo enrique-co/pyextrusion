@@ -4,11 +4,11 @@ PyExtrusion writes **schema version 1.1**. Historical schemas `0.2` through `1.0
 
 ## Canonical trim in 0.19.0
 
-The additive `production.trim_total_per_billet_m` or `process.trim_total_per_billet_m` field means total reject reserve per incoming billet. Omit both legacy trim fields or set them to `null`; any non-null combination is `PX1003`, including zero. Absent trim means zero. A synthetic legacy value `front_scrap_m: 0.6` must explicitly migrate to canonical total `1.2` for its verified two-pull family. Loading legacy JSON does not silently migrate it. The examples below retain their legacy meanings; [migration instructions](../user-guide/trim-topology.md) explain the compatible route. Canonical files require 0.19.0 readers; schema 1.1 alone does not imply an older reader accepts new keys.
+The additive `production.trim_total_per_billet_m` or `process.trim_total_per_billet_m` field means total reject reserve per incoming billet. Omit both legacy trim fields or set them to `null`; any non-null combination is `PX1003`, including zero. Absent trim means zero. A synthetic legacy value `front_scrap_m: 0.6` must explicitly migrate to canonical total `1.2` for its verified two-pull family. Loading legacy JSON does not silently migrate it. The examples below are synthetic **canonical** inputs; [migration instructions](../user-guide/trim-topology.md) cover existing legacy files. Canonical files require 0.19.0 readers; schema 1.1 alone does not imply an older reader accepts new keys.
 
 ## Physical butt contract
 
-The JSON input key remains `butt_mm`, in `production` or `process`: physical residual thickness inside the container. Existing physical mm values are not converted by the caller. `null` continues to select the physical default/rule. Schema versions and input keys are unchanged.
+The JSON input key remains `butt_mm`, in `production` or `process`: physical residual thickness inside the container. Existing physical mm values are not converted by the caller. `null` continues to select the physical default/rule. The physical-butt input key is unchanged; the new trim field described above is additive.
 
 The press field `billet_kg_per_mm_override` still controls the mass per mm of original incoming billet, including billet-saw loss. It does not replace `rho * container_area` for butt mass. When absent or `null`, the incoming-billet coefficient is geometric.
 
@@ -59,7 +59,8 @@ Serialized press files preserve provenance for inferred/defaulted geometry when 
     "exit_speed_m_min": 24,
     "cut_length_mm": 7000,
     "bars_requested": 1000,
-    "front_scrap_m": 2,
+    "trim_total_per_billet_m": 2,
+    "front_scrap_m": null,
     "complexity": "normal",
     "cuts": null,
     "butt_mm": null,
@@ -88,7 +89,8 @@ the current planning format deliberately has no order quantity:
   "process": {
     "exit_speed_m_min": 24,
     "cut_length_mm": 7000,
-    "front_scrap_m": 2,
+    "trim_total_per_billet_m": 2,
+    "front_scrap_m": null,
     "complexity": "normal",
     "cuts": null,
     "butt_mm": null,
@@ -143,7 +145,8 @@ A JSON format is available for a user-supplied order list. The sequence uses the
         "process": {
           "exit_speed_m_min": 24,
           "cut_length_mm": 7000,
-          "front_scrap_m": 2,
+          "trim_total_per_billet_m": 2,
+          "front_scrap_m": null,
           "complexity": "normal",
           "cuts": null,
           "butt_mm": null,
@@ -169,6 +172,12 @@ result = calculate_production_sequence(press, orders, start_at=start_at)
 `start_at` is optional and must be an ISO-8601 datetime string when present. Sequence-order request modes are limited to `bars`, `kg`, `m` and `billets`. `minutes` and `hours` remain standalone planning-capacity requests.
 
 Calculated results can be serialized with `ProductionSequenceResult.to_json()`.
+
+## Result scope
+
+For a calculation result, `process.trim_total_per_billet_m` is per incoming billet and `process.trim_per_pull_m` is the total on a full pull. The `production` block reports `final_saw_events`, `internal_billet_transitions`, `puller_saw_events` and `billet_saw_events` for the actual order, including a partial last group.
+
+A quantity-free process result has top-level trim fields plus `final_saw_events_per_pull` and `internal_billet_transitions_per_pull` for the full-pull configuration. In planning JSON those fields are under `process`; order counters are under `calculation.production` when calculation is non-null. See [result fields](result-fields.md) for exact scopes.
 
 ## Compatibility
 

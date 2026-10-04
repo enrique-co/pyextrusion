@@ -57,6 +57,10 @@ If a request for 300 bars requires 30 billets and those billets produce exactly 
 
 If complete-billet rounding produces 308 bars, the result remains 308. PyExtrusion reports the actual planned/manufactured quantity instead of hiding the excess.
 
+A partial **pull** is not a fractional billet: its final group can contain fewer whole billets than a full pull. Its event counts use the billets actually planned.
+
+`plan.process` describes the full-pull configuration. If at least one billet is planned, `plan.calculation.production` contains actual-order final-saw, internal-transition, puller-saw and billet-saw counters. For a time window too short for one billet, `plan.calculation` is None; do not assume those order counters exist.
+
 ### Useful planning outputs
 
 ```python

@@ -1,6 +1,6 @@
 # Installation and first steps
 
-This guide covers **PyExtrusion 0.19.0**. Examples retaining `front_scrap_m` are legacy inputs; read [the trim migration guide](trim-topology.md) before changing them.
+This guide covers **PyExtrusion 0.19.0**. The synthetic example below uses canonical total trim per incoming billet. For older input files, follow [explicit legacy migration](trim-topology.md#legacy-api-and-json-migration).
 
 ### Requirements
 
@@ -36,7 +36,7 @@ The output should identify PyExtrusion 0.19.0 and RELEASED.
 ```powershell
 py -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
-.venv\Scripts\python -m pip install pyextrusion
+.venv\Scripts\python -m pip install pyextrusion==0.19.0
 ```
 
 #### Linux / macOS
@@ -44,7 +44,7 @@ py -m venv .venv
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install pyextrusion
+.venv/bin/python -m pip install pyextrusion==0.19.0
 ```
 
 ### Your first PyExtrusion objects
@@ -104,7 +104,7 @@ case = PlanningCase(
     process=Process(
         exit_speed_m_min=24,
         cut_length_mm=7000,
-        front_scrap_m=2,
+        trim_total_per_billet_m=2,
         complexity="normal",
     ),
 )
@@ -124,6 +124,8 @@ print(plan.time_used_min)
 This asks a simple question:
 
 > How many complete billets are required to produce at least 300 finished bars, and what are the resulting production quantities and technical press time?
+
+The reserve of 2 m is a **total per incoming billet**: a two-pull billet receives 1 m per sequential contribution. It is not front-only scrap or predicted charge-weld extent. The result separates commercial cuts from physical saw events; see [trim topology](trim-topology.md).
 
 PyExtrusion does not create fractional billets. The resulting number of manufactured bars can therefore be slightly above the requested target.
 

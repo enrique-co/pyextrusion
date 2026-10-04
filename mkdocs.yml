@@ -1,4 +1,4 @@
-site_name: PyExtrusion
+site_name: PyExtrusion 0.19.0
 site_url: https://pyextrusion.com/
 site_description: Engineering calculation toolkit for aluminium extrusion
 site_author: Enrique Calvo Ordonez
@@ -83,6 +83,15 @@ nav:
 
 plugins:
   - search
+
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn
 
 markdown_extensions:
   - admonition

@@ -1,6 +1,6 @@
 # Thermal Boundaries
 
-PyExtrusion 0.18.0 exposes three distinct thermal tool families. They must not
+PyExtrusion 0.19.0 exposes three distinct thermal tool families. They must not
 be combined into a claim that the package predicts production exit
 temperature.
 
