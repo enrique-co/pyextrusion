@@ -17,7 +17,7 @@ assumptions are supplied by the caller.
   estimate, Saha local thermal source terms and Sheppard Eq. 2.25 interface
   temperature.
 - [Engineering API](../api-reference/engineering.md): runnable examples using
-  the public 0.18.0 interface.
+  the public 0.19.0 interface.
 
 ## Interpretation boundary
 

@@ -64,7 +64,9 @@ M_{billet\ saw}=C_{B,effective} k_{billet}
 
 `C_B,effective` is geometric by default or the user/plant incoming-billet override. One butt is counted per billet, not per pull. See [Geometry](geometry.md#physical-butt-and-equivalent-incoming-billet-length) for the unchanged upsetting relation and override limitation.
 
-### Nominal gross productivity
+### Canonical trim and physical event geometry
+
+All lengths below are in metres. Let `d_total = trim_total_per_billet_m`, `p = profiles_per_billet`, and `d_j = d_total / p` for each actual contribution. The total is not a front-only or metallurgical charge-weld prediction.
 
 Before calculating mass/time, positive-trim geometry uses:
 
@@ -73,6 +75,10 @@ L_{pull}=\sum_j[n_{c,j}L_c+d_j+(n_{c,j}+1)k_f]+k_{puller}
 \]
 
 For common commercial positions `n_c`, `N_final = p N_B(n_c+1)`. For p=1, `N_internal = N_B - N_pulls` and `N_final = N_B n_c + N_pulls + N_internal`. Actual partial groups matter. See [trim topology](../user-guide/trim-topology.md) for the separate zero-trim convention. Saw events are not multiplied by simultaneous exits; mass uses combined linear weight.
+
+For zero trim, retain `N_final = p * N_B * n_c + N_pulls`; no extra rejection frontier is added at an internal transition. A zero kerf keeps event counts but gives zero associated kerf length and mass. Commercial `cuts` is not N_final.
+
+### Nominal gross productivity
 
 \[
 Q_{gross,nominal}
@@ -259,5 +265,5 @@ F_{reserve}=F_{press}-F_{baseline}
 \]
 
 \(F_{reserve}\) is a screening indicator only. It is not guaranteed remaining
-capacity, a safety margin, force available for a porthole die or a prediction
+capacity, available hydraulic capacity, a safety margin, force available for a porthole die or a prediction
 of the real die load.

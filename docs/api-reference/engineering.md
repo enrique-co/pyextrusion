@@ -2,7 +2,7 @@
 
 The public analytical interface is available from `pyextrusion.engineering`.
 The examples below use only symbols exported by that package in PyExtrusion
-0.18.0.
+0.19.0.
 
 ## Mechanical screening chain
 
@@ -64,7 +64,7 @@ print(f_reserve_mn, screening.within_limit)
 
 `required_force_mn` is the API attribute; its engineering interpretation here
 is `F_baseline`. Likewise, `margin_mn` is reported publicly as the arithmetic
-`F_reserve`. Neither value predicts the final die load or establishes a safety
+`F_reserve`. It is a screening difference, not available hydraulic capacity. Neither value predicts the final die load or establishes a safety
 margin. See [Mechanical baseline](../engineering/mechanical-baseline.md).
 
 ## Select AA6060 or AA6063 explicitly

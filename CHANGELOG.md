@@ -1,5 +1,15 @@
 # Changelog
 
+## Documentation maintenance for 0.19.0
+
+Documentation-only changes; no new package release or calculation change:
+
+- Use canonical trim in new Python/JSON onboarding examples; keep legacy migration explicit.
+- Distinguish per-contribution trim, full-pull traces and actual-order event counters.
+- Clarify positive/zero trim, partial pulls, zero kerf and the absence of added saw-operation time.
+- Correct integration wording about physical grouping and retain the container-section butt contract.
+- Align current version references and mechanical/thermal interpretation limits.
+
 ## 0.19.0 — 2026-10-03
 
 - Adds canonical `trim_total_per_billet_m`: the total industrial reject reserve per incoming billet, divided across sequential pulls. It is not a predicted charge-weld length.

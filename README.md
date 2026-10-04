@@ -8,9 +8,9 @@
 
 **Engineering calculation toolkit for aluminium extrusion**
 
-Version: **0.19.0** — 2026-10-03.
+Version: **0.19.0** — 2026-10-03. Reference: [tag v0.19.0](https://github.com/enrique-co/pyextrusion/tree/v0.19.0), commit `9f7f4b495c63ba671e7412fa76e655dc068216d4`.
 
-0.19.0 adds `trim_total_per_billet_m`, explicit legacy migration, and corrected positive-trim multibillet final-saw events, including partial pulls. Read the [trim contract and migration guide](docs/user-guide/trim-topology.md) before migrating sequential-pull data. Examples below retaining `front_scrap_m` deliberately use the legacy contract; do not mechanically rename it in p=2 data.
+0.19.0 adds `trim_total_per_billet_m`, explicit legacy migration, and corrected positive-trim multibillet final-saw events, including partial pulls. Read the [trim contract and migration guide](docs/user-guide/trim-topology.md) before migrating sequential-pull data. New examples below use the canonical total. Retain the original legacy file and migrate with a verified family; do not mechanically rename `front_scrap_m` in existing p=2 data.
 
 Version 0.18.0 corrects `butt_mm` as physical residual thickness inside the container: butt mass uses the container section, then converts once to incoming-billet equivalent length. Existing physical mm inputs and the measured incoming-billet coefficient override remain supported. Calculated lengths, losses and feasibility may differ from 0.17.0; see the [changelog](CHANGELOG.md).
 
@@ -29,7 +29,15 @@ PyExtrusion includes a source-traced engineering layer, basic deterministic econ
 - **Economics** — recurring production cost, material/scrap economics,
   tooling/development cost and sales-margin calculations.
 
-## What changed in 0.18.0
+## What changed in 0.19.0
+
+- Defines total trim per incoming billet and divides it across sequential pulls.
+- Provides explicit legacy migration, without silent input precedence.
+- Counts final-saw events per actual positive-trim billet contribution, including a partial last pull.
+- Exposes separate final-saw, internal-transition, puller-saw and billet-saw counters; commercial `cuts` remain distinct.
+- Keeps the physical butt contract and bounded Engineering/Economics models unchanged.
+
+## Retained from 0.18.0
 
 - Corrects physical butt mass and equivalent incoming-billet length without changing the physical input values or redefining upsetting.
 - Adds `AA6060` and `AA6063` as identical-object aliases of the existing source-traced constitutive models, preserving scientific names and provenance.
@@ -68,7 +76,7 @@ case = StudyCase(
         exit_speed_m_min=24,
         cut_length_mm=7000,
         bars_requested=1000,
-        front_scrap_m=2,
+        trim_total_per_billet_m=2,
     ),
 )
 
@@ -79,6 +87,8 @@ print(result.billet.recommended_length_mm)
 print(result.production.billets_per_pull)
 print(result.productivity.real_net_kg_h)
 ```
+
+All numerical examples are synthetic. `trim_total_per_billet_m=2` means 2 m total per incoming billet, not 2 m per pull. With two sequential pulls, each contribution receives 1 m. Inspect `result.process.trim_per_pull_m` for the selected full pull and the separate `result.production.*_saw_events` counters for the actual order.
 
 `table_length_m` is mandatory. Billet/container geometry, billet limits, dead time, saw kerfs and a reference productivity target can be inferred from `nominal_size_in`; real plant values supplied by the user always take priority.
 
@@ -100,7 +110,7 @@ planning_case = PlanningCase(
     process=Process(
         exit_speed_m_min=24,
         cut_length_mm=7000,
-        front_scrap_m=2,
+        trim_total_per_billet_m=2,
         complexity="normal",
     ),
 )
@@ -165,7 +175,7 @@ PyExtrusion returns results in the same order as the supplied presses. It does *
 
 The current model supports:
 
-- `k_billets_1_profile`: one continuous pull formed from one or more billets; `k` is calculated dynamically after billet optimisation;
+- `k_billets_1_profile`: one continuous pull formed from one or more billets; `k` is resolved using physical table occupancy within each candidate, while selection remains billet-first;
 - `1_billet_2_profiles`: one billet produces two complete sequential pulls.
 
 A scenario requiring **3 or more complete sequential profiles from one billet is not supported** and is reported explicitly through support-status fields.
@@ -180,7 +190,7 @@ Publicly documented calculations include:
 - billet mass and kg/mm from actual billet geometry or a measured mass override;
 - billet-first cut/billet optimisation;
 - dynamic billet-on-billet continuous pulls;
-- modeled startup, complexity, butt, front-scrap and saw losses;
+- modeled startup, complexity, physical butt, total trim and saw losses;
 - technical dead time and extrusion timing;
 - nominal, real gross and real net productivity;
 - geometric and productive utilisation indicators;
@@ -193,11 +203,11 @@ Publicly documented calculations include:
 
 ## Model boundary
 
-PyExtrusion 0.18.0 models **direct aluminium extrusion**. It does not perform full industrial scheduling or complete extrusion-force, thermal, metallurgical, die-life or plant-resource prediction.
+PyExtrusion 0.19.0 models **direct aluminium extrusion**. It does not perform full industrial scheduling or complete extrusion-force, thermal, metallurgical, die-life or plant-resource prediction.
 
 The mechanical result is `F_baseline`, an equivalent-axisymmetric baseline. A
 comparison `F_reserve = F_press - F_baseline` is only a screening indicator; it is not
-guaranteed remaining capacity, a safety margin, force available for a porthole
+available hydraulic capacity, guaranteed remaining capacity, a safety margin, force available for a porthole
 die or a prediction of the real die load.
 
 The productivity index is orientative. It is not a physical quantity and must not be used alone as the final industrial selection criterion.

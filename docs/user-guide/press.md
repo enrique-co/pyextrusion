@@ -58,7 +58,7 @@ The three saw-related values are independent:
 - puller saw;
 - final saw.
 
-A value of `0` is allowed and means that the corresponding operation contributes no material loss from kerf.
+A value of `0` is allowed and means that the corresponding operation contributes no length or mass loss from kerf. Physical event counters retain the selected topology; this does not add or remove a separate saw-operation time.
 
 Example:
 

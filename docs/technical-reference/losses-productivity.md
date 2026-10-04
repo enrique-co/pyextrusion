@@ -55,6 +55,10 @@ Scrap_{fixed,\%}
 \times 100
 \]
 
+### Total trim mass
+
+For canonical trim, order rejection mass is `N_B * trim_total_per_billet_m * combined_linear_weight`. Do not multiply by p again. The compatibility result name `scrap.front_scrap_kg` denotes this total, not exclusively a leading crop.
+
 ### Additional modeled allowances
 
 The physical butt loss is calculated separately from these planning allowances. See the physical definition below.
@@ -94,7 +98,7 @@ These categories are calculation aids. They are not a universal scrap standard f
 
 `butt_mm` is the residual thickness in the container. With `A_c` in m², butt mass per billet is `rho * A_c * butt_mm / 1000`, even when an incoming-billet kg/mm override is supplied. The incoming-billet equivalent is this mass divided by the effective billet kg/mm coefficient. Never multiply the physical thickness directly by the incoming-billet coefficient when the two sections differ.
 
-Order-level butt scrap is the number of billets times this single-billet mass. The number of sequential pulls does not multiply the number of butts. Billet-saw scrap still uses the incoming-billet coefficient; front discard, puller and final saw losses retain their existing through-die basis.
+Order-level butt scrap is the number of billets times this single-billet mass. The number of sequential pulls does not multiply the number of butts. Billet-saw scrap still uses the incoming-billet coefficient; total trim, puller and final saw losses use the through-die basis.
 
 Changing butt thickness can change billet feasibility, selected cuts/family, losses and derived scores. If the family and events remain unchanged, through-die mass, good mass, extrusion time and net kg/h remain unchanged. A loss-based score can change without a change in physical net productivity.
 
@@ -118,7 +122,7 @@ means:
 
 > that operation contributes no material loss through saw thickness.
 
-It does not automatically remove unrelated cycle time or other process effects.
+It does not remove the declared event topology. Additional final kerf changes physical extrusion length, mass and extrusion time, but no separate saw-operation time or new press dead-time event is added.
 
 ---
 
@@ -185,7 +189,7 @@ T_{extrusion}
 \frac{L_{extruded,physical}}{V_e}
 \]
 
-where the physical extruded length includes finished product, represented front scrap, and downstream puller/final-saw kerf allowances.
+where the physical extruded length includes finished product, total trim/reject reserve, and downstream puller/final-saw kerf allowances.
 
 When expressed in metres and metres per minute, the result is in minutes.
 
@@ -222,7 +226,7 @@ Q_{gross,real}
 {T_{technical,h}}
 \]
 
-The physically represented extruded mass includes good product, front scrap and downstream saw kerfs. Modeled startup and complexity allowances remain outside this physical extrusion boundary.
+The physically represented extruded mass includes good product, total trim and downstream saw kerfs. Modeled startup and complexity allowances remain outside this physical extrusion boundary.
 
 ### Net productivity
 

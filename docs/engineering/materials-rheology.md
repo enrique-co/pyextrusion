@@ -2,7 +2,7 @@
 
 ## Constitutive models
 
-PyExtrusion 0.18.0 exposes two separate hot-working constitutive datasets:
+PyExtrusion 0.19.0 exposes two separate hot-working constitutive datasets:
 
 - `AA6063`;
 - `AA6060`.

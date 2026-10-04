@@ -38,7 +38,7 @@ source traceability and limitations explicit.
 The mechanical force result is \(F_{baseline}\), an equivalent-axisymmetric
 baseline. If it is compared with a configured press scalar,
 \(F_{reserve}=F_{press}-F_{baseline}\) is a screening indicator only. It is not
-guaranteed remaining capacity, a safety margin, force available for a porthole
+available hydraulic capacity, guaranteed remaining capacity, a safety margin, force available for a porthole
 die or a prediction of the real die load.
 
 PyExtrusion does not currently provide a complete model for:

@@ -15,6 +15,12 @@ models and deterministic production economics together in one Python package.
     See the [PyPI project page](https://pypi.org/project/pyextrusion/) or
     [source repository](https://github.com/enrique-co/pyextrusion).
 
+## Production input and result contract
+
+Use `trim_total_per_billet_m` for the total rejection reserve of one incoming billet. Sequential pulls share that total; it is not front-only scrap, trim per pull or predicted charge-weld extent.
+
+Commercial `cuts` are distinct from final-saw, internal-transition, puller-saw and billet-saw counters. Actual billet contributions govern a partial last pull. A zero kerf removes length/mass loss, not event topology. Start with [Profile & Process](user-guide/profile-process.md) and [trim topology & migration](user-guide/trim-topology.md).
+
 ## Three working areas
 
 <div class="grid cards" markdown>
@@ -52,11 +58,11 @@ models and deterministic production economics together in one Python package.
 
 ## Model boundaries matter
 
-In 0.18.0, `butt_mm` is physical residual thickness in the container. Butt mass uses the container section and is converted once to incoming-billet equivalent length. Existing physical values and the measured incoming-billet coefficient remain supported. See [physical butt geometry](technical-reference/geometry.md#physical-butt-and-equivalent-incoming-billet-length).
+Since 0.18.0, `butt_mm` is physical residual thickness in the container. Butt mass uses the container section and is converted once to incoming-billet equivalent length. Existing physical values and the measured incoming-billet coefficient remain supported. See [physical butt geometry](technical-reference/geometry.md#physical-butt-and-equivalent-incoming-billet-length).
 
 The Engineering pressure/force result is an **equivalent-axisymmetric
-mechanical baseline**, not the final load prediction for a shaped, bridge or
-porthole die. Thermal functions are bounded analytical estimates and local
+mechanical screening baseline**, not the final load prediction for a shaped, bridge or
+porthole die. `F_reserve = F_press - F_baseline` is only a screening difference, not available hydraulic capacity. Thermal functions are bounded analytical estimates and local
 source terms; PyExtrusion does not currently provide a production-grade
 exit-temperature predictor.
 

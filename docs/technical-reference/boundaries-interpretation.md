@@ -29,7 +29,7 @@ limit is useful for mechanical feasibility screening, but it is not a validated
 final force requirement for a real shaped or porthole die.
 
 The difference \(F_{reserve}=F_{press}-F_{baseline}\) is also only a screening
-indicator. It must not be presented as guaranteed remaining capacity, a safety
+indicator. It must not be presented as available hydraulic capacity, guaranteed remaining capacity, a safety
 margin, force available for a porthole die or a prediction of the real die
 load.
 

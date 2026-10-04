@@ -52,7 +52,7 @@ The inside diameter of the container. Do not confuse it with the billet diameter
 
 ### Cut
 
-One finished-length division along the extruded pull. In PyExtrusion, `cuts` often means the number of requested-length pieces represented by one billet contribution.
+One finished-length division along the extruded pull. In PyExtrusion, `cuts` counts commercial positions per billet contribution to one pull and per exit, not all physical saw strokes. A p=2 billet contributes that count twice.
 
 ### Cut length
 
@@ -84,7 +84,7 @@ A ratio describing the reduction from the incoming container cross-section to th
 
 ### Fixed scrap
 
-A PyExtrusion summary group containing fixed process losses such as butt, front scrap and saw-related losses.
+A PyExtrusion summary group containing fixed process losses such as physical butt, total trim and saw-related losses.
 
 ### F_baseline
 
@@ -95,7 +95,7 @@ bridge or porthole die.
 ### F_reserve
 
 Arithmetic screening difference `F_press - F_baseline`. It is not guaranteed
-remaining capacity, a safety margin or force available for a porthole die.
+remaining capacity, available hydraulic capacity, a safety margin or force available for a porthole die.
 
 ### Total trim / reject reserve and legacy front scrap
 
@@ -104,6 +104,14 @@ remaining capacity, a safety margin or force available for a porthole die.
 ### Commercial positions and physical saw events
 
 `cuts` and `cuts_per_pull` count commercial positions per exit. The separate `production.final_saw_events` counts transverse saw strokes across all exits; `internal_billet_transitions`, `puller_saw_events` and `billet_saw_events` have separate physical meanings.
+
+### Trim per contribution / trim per full pull
+
+One incoming billet's total reserve is divided by `profiles_per_billet` to obtain trim per contribution. The result `trim_per_pull_m` sums the contributions of a **complete** pull. For a partial last pull, use only its actual billets; do not treat a full-pull result as the partial total.
+
+### Internal billet transition
+
+A boundary between successive billets inside the same continuous pull. For p=1, the actual order count is billets minus pulls; for p=2 it is zero. With positive trim, the corresponding rejected zones affect final-saw topology. A transition is not another puller or press dead-time event.
 
 ### Good kg
 
@@ -119,7 +127,7 @@ A profile containing one or more enclosed internal voids. Use `profile_type="hol
 
 ### Kerf
 
-The width of material removed by a saw cut. PyExtrusion can model billet, puller and final-saw kerfs separately.
+The width of material removed by a saw cut. PyExtrusion can model billet, puller and final-saw kerfs separately. A zero kerf removes its represented length/mass loss, not the declared physical event.
 
 ### Linear weight
 
@@ -157,7 +165,7 @@ The extrusion machine and its relevant limits/configuration as represented by th
 
 ### Process / ProcessSpec
 
-The PyExtrusion object describing how a profile is extruded: speed, cut length, front scrap, complexity and optional process overrides. It does not contain the order quantity.
+The PyExtrusion object describing how a profile is extruded: speed, cut length, total trim per incoming billet, complexity and optional process overrides. It does not contain the order quantity.
 
 ### Production order
 
@@ -189,7 +197,7 @@ Equipment that grips/guides the extruded profile as it leaves the press and trav
 
 ### Puller saw
 
-A saw operation associated with the puller/end of a pull. PyExtrusion can represent its kerf loss.
+A saw operation associated with the end of each actual pull. `production.puller_saw_events` counts the operations; zero kerf gives zero loss without removing these events.
 
 ### Ram
 

@@ -77,9 +77,11 @@ process = Process(
 - optional butt override (`butt_mm`: physical residual thickness inside the container);
 - explicit legacy front-scrap inputs for older data only; do not combine with canonical trim.
 
+For `p` sequential pulls, `trim_per_contribution = trim_total_per_billet_m / p`. This total is not front-only scrap, trim per pull or a metallurgical charge-weld prediction. The output `trim_per_pull_m` sums all contributions in a **full** pull; it is not always the per-contribution value.
+
 See [trim topology and legacy migration](trim-topology.md). In particular, a synthetic legacy `front_scrap_m=0.6` with two sequential pulls becomes canonical total `1.2`, not `0.6`.
 
-The butt input and plant butt rules retain physical mm values. Defaults remain 15 mm for solid/plate and 20 mm for hollow/tubular. No numeric input migration is required. The engine converts butt mass to an equivalent incoming-billet length internally, once. The v0.18.0 correction can change calculated lengths, losses and discrete feasibility compared with earlier calculations, which used the incoming-billet section for the butt.
+The butt input and plant butt rules retain physical mm values. Defaults remain 15 mm for solid/plate and 20 mm for hollow/tubular. No numeric input migration is required. Butt mass uses density and the container-bore section. The engine converts this mass to an equivalent incoming-billet length internally, once. `billet_kg_per_mm_override` changes the incoming-billet coefficient and upstream billet-saw loss, not that physical butt mass. The v0.18.0 correction can change calculated lengths, losses and discrete feasibility compared with earlier calculations, which used the incoming-billet section for the butt.
 
 ### Important process ranges
 

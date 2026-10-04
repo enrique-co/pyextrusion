@@ -2,7 +2,9 @@
 
 The `examples/` directory contains runnable Python and JSON examples.
 
-`examples/trim_migration.py` demonstrates a synthetic canonical total `1.2 m/billet` and its unchanged physical results. Earlier examples retain `front_scrap_m` deliberately as legacy inputs; do not blindly rename that field, especially for p=2. See [trim topology and migration](../user-guide/trim-topology.md).
+`examples/trim_migration.py` demonstrates a synthetic canonical total `1.2 m/billet` and its unchanged physical results. The runnable historical examples in `examples/` retain `front_scrap_m` deliberately as legacy inputs; do not blindly rename that field, especially for p=2. See [trim topology and migration](../user-guide/trim-topology.md).
+
+The current [Getting Started](../user-guide/getting-started.md) and [JSON API](../api-reference/json.md) examples use canonical inputs. All example values are synthetic; substitute your own measured data when needed.
 
 ## Minimal press from nominal size
 
@@ -16,7 +18,7 @@ press = Press(
 )
 ```
 
-## Real plant dimensions
+## Explicit press dimensions (synthetic)
 
 ```python
 press = Press(

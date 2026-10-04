@@ -1,6 +1,6 @@
 # PyExtrusion integration guide — 0.19.0
 
-New inputs should use `trim_total_per_billet_m`. Examples retaining `front_scrap_m` below deliberately demonstrate the legacy contract (p=1 per billet, p=2 per pull). Canonical and non-null legacy inputs cannot be combined. See [explicit migration and public event counters](docs/user-guide/trim-topology.md).
+New inputs should use `trim_total_per_billet_m`. The synthetic examples below use that canonical total. Legacy `front_scrap_m` remains per billet for p=1 and per sequential pull for p=2; migrate explicitly with a verified family. Canonical and non-null legacy inputs cannot be combined. See [explicit migration and public event counters](docs/user-guide/trim-topology.md).
 
 PyExtrusion exposes one deterministic direct-extrusion engine through Python objects, JSON files and CLI commands. The calculations use the current PyExtrusion engine.
 
@@ -37,7 +37,7 @@ case = StudyCase(
         exit_speed_m_min=24,
         cut_length_mm=7000,
         bars_requested=1000,
-        front_scrap_m=2,
+        trim_total_per_billet_m=2,
         complexity="normal",
     ),
 )
@@ -59,6 +59,12 @@ result.geometry.billets_per_pull
 result.billet.recommended_length_mm
 result.production.bars_per_billet
 result.production.n_pulls
+result.production.final_saw_events
+result.production.internal_billet_transitions
+result.production.puller_saw_events
+result.production.billet_saw_events
+result.process.trim_total_per_billet_m
+result.process.trim_per_pull_m
 result.scrap.total_kg
 result.productivity.real_net_kg_h
 result.productivity.productivity_index
@@ -66,17 +72,13 @@ result.productivity.productivity_index
 
 ## 3. Billet-first and multi-billet semantics
 
-PyExtrusion first selects the **longest feasible billet**. Only then does it calculate:
-
-```text
-billets_per_pull = floor(table_length / segment_length_per_billet)
-```
+PyExtrusion selects the **longest feasible billet** among valid candidates. For each candidate, grouping and physical table occupancy already include its trim and downstream kerfs. Do not reconstruct `billets_per_pull` by dividing table length by net commercial length alone; use the returned configuration.
 
 It never reduces cuts merely to fit more billets on the table.
 
 The multi-billet family is `k_billets_1_profile`; `k` is dynamic and may be greater than 3. The reverse case is deliberately limited: `1_billet_2_profiles` is supported, but 3+ profiles per billet are reported as unsupported.
 
-For positive-trim multibillet continuous pulls, each actual billet contribution requires `cuts + 1` final-saw events, while the puller event is shared once per pull. A final partial pull uses its actual billet count: internal transitions are `N_B - N_pulls`, not nominal full-pull capacity. Zero trim retains one end-preparation allowance per actual pull plus the commercial positions.
+For positive-trim multibillet continuous pulls, each actual billet contribution requires `cuts + 1` final-saw events, while the puller event is shared once per pull. A final partial pull uses its actual billet count: internal transitions are `N_B - N_pulls`, not nominal full-pull capacity. Zero trim retains one end-preparation allowance per actual pull plus the commercial positions. Kerf zero makes the corresponding length/mass loss zero without removing the event topology. Additional downstream kerf changes extrusion time, not a separate saw-operation time or new press dead-time event.
 
 ## 4. Planning API — quantity-free process architecture
 
@@ -90,7 +92,7 @@ process_case = PlanningCase(
     process=Process(
         exit_speed_m_min=24,
         cut_length_mm=7000,
-        front_scrap_m=2,
+        trim_total_per_billet_m=2,
         complexity="normal",
     ),
 )
@@ -210,8 +212,12 @@ A planning-case JSON contains `profile` + `process`; no order quantity is requir
 
 Do not substitute billet area for container area:
 
-- **container bore area** → extrusion ratio and ram speed;
-- **actual billet area / kg-per-mm** → material mass, billet length and billet-related losses.
+- **container bore area** → extrusion ratio, ram speed and physical butt mass;
+- **effective incoming-billet kg/mm** → billet length/mass and upstream billet-saw loss.
+
+`butt_mm` is physical residual thickness in the container. Its mass is converted once to incoming-billet equivalent length. A `billet_kg_per_mm_override` changes that equivalent, not the butt mass, and does not redefine the geometric upsetting relation.
+
+For canonical trim, total rejection mass is billet count × trim_total_per_billet_m × combined linear weight. Do not multiply the total by sequential pulls again. `trim_per_pull_m` is the sum for a full pull; partial orders use actual contributions. The process-level billet recommendation remains representative of a complete pull and can require a plant-specific last-billet adjustment.
 
 ## 10. Result discovery and errors
 

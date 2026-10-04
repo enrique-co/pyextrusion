@@ -23,7 +23,7 @@ The force returned by `pressure.required_force_mn` must be interpreted as:
 F_{baseline}=p_{peak}A_C
 \]
 
-`F_baseline` is an **equivalent-axisymmetric mechanical baseline**. The Python
+`F_baseline` is an **equivalent-axisymmetric mechanical screening baseline**. The Python
 attribute retains the public name `required_force_mn`, but that name does not
 make the value a final prediction for a real shaped, bridge or porthole die.
 
@@ -47,6 +47,7 @@ margin.
 
 `F_reserve` is only a screening indicator. It is not:
 
+- available hydraulic capacity or a certified hydraulic reserve;
 - guaranteed remaining press capacity;
 - a safety margin or safety factor;
 - force available for a porthole die;
