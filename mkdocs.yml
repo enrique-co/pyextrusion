@@ -6,8 +6,13 @@ repo_name: enrique-co/pyextrusion
 repo_url: https://github.com/enrique-co/pyextrusion
 edit_uri: edit/main/docs/
 
+# Theme sources are loaded by Jinja, never copied into the published site.
+exclude_docs: |
+  /overrides/
+
 theme:
   name: material
+  custom_dir: docs/overrides
   language: en
   features:
     - navigation.tabs

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block htmltitle %}<title>PyExtrusion — Engineering Aluminium Extrusion</title>{% endblock %}
+{% block fonts %}{% endblock %}
+{% block extrahead %}
+  <link rel="icon" href="{{ 'assets/brand/favicon.png' | url }}">
+  <link rel="stylesheet" href="{{ 'stylesheets/home.css' | url }}">
+  <meta name="theme-color" content="#ffffff">
+  <meta property="og:title" content="PyExtrusion — A beautiful extrusion">
+  <meta property="og:description" content="Engineering Aluminium Extrusion. Deterministic production planning, analytical engineering and economics in Python.">
+  <meta property="og:image" content="{{ config.site_url }}assets/brand/hero-1672.webp">
+  <meta property="og:type" content="website">
+{% endblock %}
+
+{% block header %}
+<a class="px-skip" href="#engineering-aluminium-extrusion">Skip to content</a>
+<header class="px-header" data-md-component="header">
+  <div class="px-shell px-header__inner">
+    <a class="px-brand" href="{{ '.' | url }}" aria-label="PyExtrusion — A beautiful extrusion, home">
+      <img src="{{ 'assets/brand/wordmark-480.webp' | url }}" srcset="{{ 'assets/brand/wordmark-960.webp' | url }} 2x" width="235" height="75" alt="PyExtrusion — A beautiful extrusion">
+    </a>
+    <nav class="px-nav" aria-label="Main navigation">
+      <a href="#capabilities">Capabilities</a>
+      <a href="{{ 'user-guide/' | url }}">Documentation</a>
+      <a href="{{ config.repo_url }}">GitHub <span aria-hidden="true">↗</span></a>
+      <a href="https://pypi.org/project/pyextrusion/">PyPI <span aria-hidden="true">↗</span></a>
+    </nav>
+    <div class="px-search-wrap">
+      <label class="md-header__button md-icon px-search-trigger" for="__search" role="button" aria-label="Search documentation" tabindex="0">
+        {% include ".icons/material/magnify.svg" %}
+      </label>
+      {% include "partials/search.html" %}
+    </div>
+    <details class="px-mobile-nav">
+      <summary aria-label="Toggle navigation"><span class="px-menu-lines" aria-hidden="true"></span><span>Menu</span></summary>
+      <nav aria-label="Mobile navigation">
+        <a href="#capabilities">Capabilities</a>
+        {% for item in nav %}
+          {% if item.children %}<a href="{{ item.children[0].url | url }}">{{ item.title }}</a>{% elif not item.active %}<a href="{{ item.url | url }}">{{ item.title }}</a>{% endif %}
+        {% endfor %}
+        <a href="{{ config.repo_url }}">GitHub ↗</a>
+        <a href="https://pypi.org/project/pyextrusion/">PyPI ↗</a>
+      </nav>
+    </details>
+  </div>
+</header>
+{% endblock %}
+
+{% block tabs %}{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block container %}
+  <div class="px-home" data-md-component="content">{{ page.content }}</div>
+{% endblock %}
+
+{% block footer %}
+<footer class="px-footer">
+  <div class="px-shell px-footer__main">
+    <a class="px-brand" href="{{ '.' | url }}" aria-label="PyExtrusion — A beautiful extrusion, home">
+      <img src="{{ 'assets/brand/wordmark-480.webp' | url }}" width="235" height="75" alt="PyExtrusion — A beautiful extrusion" loading="lazy">
+    </a>
+    <p>Engineering Aluminium Extrusion.<br><span>Built with Python. Shaped by industrial practice.</span></p>
+    <a class="px-to-top" href="#engineering-aluminium-extrusion">Back to top <span aria-hidden="true">↑</span></a>
+  </div>
+  <div class="px-shell px-footer__bottom">
+    <p>© 2026 Enrique Calvo Ordonez · Apache-2.0</p>
+    <nav aria-label="Project links"><a href="{{ 'about/project/' | url }}">About</a><a href="{{ 'about/citation/' | url }}">Cite PyExtrusion</a><a href="{{ 'about/license/' | url }}">Licence</a><a href="{{ 'about/changelog/' | url }}">Changelog</a></nav>
+  </div>
+</footer>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ 'javascripts/home.js' | url }}" defer></script>
+{% endblock %}
