@@ -58,10 +58,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible, label:focus-visibl
 .px-button--secondary:hover { background: var(--px-soft); border-color: #9cabb6; }
 .px-hero__meta { display: flex; gap: 20px; margin-top: 23px !important; color: var(--px-muted); font-size: 11px; }
 .px-hero__meta span + span::before { content: "·"; margin-right: 20px; }
-.px-hero__art { align-self: center; min-width: 0; padding-top: 24px; }
-.px-figure-label { display: flex; justify-content: space-between; align-items: center; margin: 0 22px 22px; color: #6b7983; font-family: var(--md-code-font); font-size: 9px; letter-spacing: .12em; }
+.px-hero__art { align-self: center; min-width: 0; }
 .px-hero__art img { width: 100%; }
-.px-hero__art figcaption { display: flex; justify-content: space-between; gap: 12px; margin: 22px 22px 0; padding-top: 14px; border-top: 1px solid var(--px-line); font-size: 10px; letter-spacing: .025em; color: var(--px-muted); }
 .px-route-strip { background: var(--px-soft); border-block: 1px solid var(--px-line); }
 .px-route-strip nav { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-block: 22px; }
 .px-route-strip__label { font-size: 9px; letter-spacing: .1em; color: var(--px-muted); }
@@ -165,8 +163,11 @@ a:focus-visible, button:focus-visible, summary:focus-visible, label:focus-visibl
 .px-footer__main > p > span { color: var(--px-muted); }
 .px-to-top { margin-left: auto; font-size: 11px; white-space: nowrap; }
 .px-to-top span { margin-left: 14px; color: var(--px-blue); }
-.px-footer__bottom { padding-block: 19px; border-top: 1px solid var(--px-line); display: flex; justify-content: space-between; gap: 20px; font-size: 10px; color: var(--px-muted); }
+.px-footer__bottom { padding-block: 19px; border-top: 1px solid var(--px-line); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; font-size: 10px; color: var(--px-muted); }
 .px-footer__bottom nav { display: flex; gap: 24px; }
+.px-python-powered { display: inline-flex; align-items: flex-start; gap: 2px; flex-shrink: 0; }
+.px-python-powered img { display: block; width: 140px; height: 56px; }
+.px-python-powered > span { font-size: 11px; line-height: 1; }
 @media (min-width: 1440px) { .px-hero { gap: 40px; padding-block: 90px 80px; } }
 @media (max-width: 1219px) {
   .px-header__inner { gap: 23px; }
@@ -186,8 +187,6 @@ a:focus-visible, button:focus-visible, summary:focus-visible, label:focus-visibl
   .px-hero__meta { gap: 10px; font-size: 10px; }
   .px-hero__meta span + span::before { margin-right: 10px; }
   .px-button { gap: 14px; padding-inline: 15px; font-size: 12px; }
-  .px-figure-label { font-size: 8px; }
-  .px-hero__art figcaption { font-size: 9px; }
   .px-route-strip nav { flex-wrap: wrap; justify-content: flex-start; gap: 14px 30px; }
   .px-route-strip__label { width: 100%; }
   .px-route-strip a { font-size: 11px; }
@@ -235,9 +234,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, label:focus-visibl
   .px-button { font-size: 12px; min-height: 48px; gap: 23px; padding-inline: 20px; }
   .px-hero__meta { font-size: 10px; gap: 17px; margin-top: 20px !important; }
   .px-hero__meta span + span::before { margin-right: 17px; }
-  .px-hero__art { padding: 0; width: 100%; }
-  .px-figure-label { margin: 0 0 14px; font-size: 8px; }
-  .px-hero__art figcaption { margin: 16px 0 0; padding-top: 12px; font-size: 9px; }
+  .px-hero__art { width: 100%; }
   .px-route-strip nav { padding-block: 19px; gap: 13px 24px; }
   .px-route-strip a { font-size: 11px; }
   .px-section { padding-block: 50px; }
@@ -292,7 +289,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, label:focus-visibl
   .px-footer__main > p { width: 100%; order: 3; font-size: 11px; }
   .px-to-top { font-size: 10px; }
   .px-to-top span { margin-left: 8px; }
-  .px-footer__bottom { flex-direction: column; gap: 14px; font-size: 9px; padding-block: 20px; }
+  .px-footer__bottom { flex-direction: column; align-items: flex-start; gap: 14px; font-size: 9px; padding-block: 20px; }
   .px-footer__bottom nav { gap: 20px; flex-wrap: wrap; }
 }
 @media (max-width: 359px) {
