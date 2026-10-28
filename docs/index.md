@@ -11,7 +11,7 @@ hide:
   <div class="px-hero__copy">
     <p class="px-eyebrow"><span class="px-dot" aria-hidden="true"></span> PYTHON LIBRARY · ALUMINIUM EXTRUSION</p>
     <h1 id="engineering-aluminium-extrusion">Engineering<br>Aluminium<br><span>Extrusion.</span></h1>
-    <p class="px-lead">From the billet to the production plan.<br>Engineering calculations for the people<br class="px-desktop-break"> who know what goes into an extrusion.</p>
+    <p class="px-lead">Engineering calculations for the people<br class="px-desktop-break"> who know what goes into an extrusion.</p>
     <div class="px-actions">
       <a class="px-button px-button--primary" href="user-guide/getting-started/">Get started <span aria-hidden="true">↗</span></a>
       <a class="px-button px-button--secondary" href="https://github.com/enrique-co/pyextrusion">Explore GitHub <span aria-hidden="true">↗</span></a>
@@ -19,9 +19,7 @@ hide:
     <p class="px-hero__meta"><span>v0.19.0</span><span>Python ≥ 3.10</span><span>Apache-2.0</span></p>
   </div>
   <figure class="px-hero__art">
-    <div class="px-figure-label"><span>THE ART OF EXTRUSION</span><span aria-hidden="true">01 /</span></div>
     <img src="assets/brand/hero-840.webp" srcset="assets/brand/hero-840.webp 840w, assets/brand/hero-1672.webp 1672w" sizes="(min-width: 1000px) 58vw, 92vw" width="1672" height="941" fetchpriority="high" alt="Technical pencil drawing of an aluminium extrusion profile with the blue π flower and the PyExtrusion signature: A beautiful extrusion.">
-    <figcaption><span>Precision in the calculation.</span><span>Beauty in the extrusion.</span></figcaption>
   </figure>
 </section>
 
@@ -85,12 +83,21 @@ hide:
 <section class="px-section px-shell" id="example" aria-labelledby="example-title">
   <div class="px-section-heading">
     <div><p class="px-eyebrow">FROM INPUT TO INSIGHT</p><h2 id="example-title">300 bars.<br>A complete production picture.</h2></div>
-    <p>A worked example from the User Guide.<br>Calculated with PyExtrusion 0.19.0.<br>Rounded here for readability.</p>
+    <p>A worked example from the User Guide.</p>
   </div>
   <div class="px-scenario">
     <div class="px-scenario__inputs">
       <p class="px-eyebrow">01 / PROCESS INPUTS</p>
-      <dl><div><dt>Nominal press / table</dt><dd>8″ / 54 m</dd></div><div><dt>Solid profile / die exits</dt><dd>1.35 kg/m / 2</dd></div><div><dt>Exit speed</dt><dd>24 m/min</dd></div><div><dt>Commercial cut length</dt><dd>7,000 mm</dd></div><div><dt>Total trim per billet</dt><dd>2 m</dd></div><div><dt>Production target</dt><dd>300 bars</dd></div></dl>
+      <dl>
+        <div><dt>Nominal press / table</dt><dd>8″ / 54 m</dd></div>
+        <div><dt>Profile type</dt><dd>Solid</dd></div>
+        <div><dt>Profile linear mass</dt><dd>1.35 kg/m</dd></div>
+        <div><dt>Die exits</dt><dd>2</dd></div>
+        <div><dt>Exit speed</dt><dd>24 m/min</dd></div>
+        <div><dt>Commercial cut length</dt><dd>7000mm</dd></div>
+        <div><dt>Total trim per billet</dt><dd>2 m</dd></div>
+        <div><dt>Production target</dt><dd>300 bars</dd></div>
+      </dl>
       <p class="px-small">Normal complexity. Default nominal-press geometry, saw kerfs, butt rule and dead time apply.</p>
     </div>
     <div class="px-scenario__results">

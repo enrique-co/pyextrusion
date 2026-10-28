@@ -20,3 +20,9 @@ Open-source licensing does not transfer authorship of the original project. PyEx
 - **License:** Apache-2.0
 
 For academic or technical citation, see [Citing PyExtrusion](citation.md).
+
+## Third-party trademarks
+
+Python and the Python logos are trademarks or registered trademarks of the Python Software Foundation. PyExtrusion is an independent project and is not affiliated with or endorsed by the Python Software Foundation.
+
+The Python Powered badge identifies the programming language used by PyExtrusion. It is reproduced unchanged from the [official Python logo resources](https://www.python.org/community/logos/) and is subject to the [PSF Trademark Usage Policy](https://www.python.org/psf/trademarks/); it is not covered by PyExtrusion's Apache-2.0 license.
