@@ -1,4 +1,4 @@
-site_name: PyExtrusion 0.19.0
+site_name: PyExtrusion 0.20.0
 site_url: https://pyextrusion.com/
 site_description: Engineering calculation toolkit for aluminium extrusion
 site_author: Enrique Calvo Ordonez
@@ -43,6 +43,7 @@ nav:
       - Installation & first calculation: user-guide/getting-started.md
       - Define a press: user-guide/press.md
       - Define a profile & process: user-guide/profile-process.md
+      - Choose a production family: user-guide/production-family.md
       - Trim topology & legacy migration: user-guide/trim-topology.md
       - Calculate a process: user-guide/calculate-process.md
       - Plan one production order: user-guide/planning.md

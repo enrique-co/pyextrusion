@@ -7,6 +7,7 @@ from .models import (
     CalculationResult,
     ComparisonResult,
     Complexity,
+    ConfigurationName,
     PressSpec,
     PlanningCase,
     ProcessResult,
@@ -54,6 +55,8 @@ def calculate_simple(
     supplement_10_pct: bool = False,
     ram_speed_mm_s: float | None = None,
     trim_total_per_billet_m: float | None = None,
+    configuration: ConfigurationName | None = None,
+    billets_per_pull: int | None = None,
 ) -> CalculationResult:
     """Low-friction API backed by the same deterministic engine as StudyInput."""
     case = StudyCase(
@@ -75,6 +78,8 @@ def calculate_simple(
             multi_billet_front_scrap_m=multi_billet_front_scrap_m,
             supplement_10_pct=supplement_10_pct,
             ram_speed_mm_s=ram_speed_mm_s,
+            configuration=configuration,
+            billets_per_pull=billets_per_pull,
         ),
     )
     return calculate_case(press, case)

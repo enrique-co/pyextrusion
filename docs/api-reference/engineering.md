@@ -2,7 +2,7 @@
 
 The public analytical interface is available from `pyextrusion.engineering`.
 The examples below use only symbols exported by that package in PyExtrusion
-0.19.0.
+0.20.0.
 
 ## Mechanical screening chain
 

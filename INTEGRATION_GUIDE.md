@@ -1,4 +1,4 @@
-# PyExtrusion integration guide — 0.19.0
+# PyExtrusion integration guide — 0.20.0
 
 New inputs should use `trim_total_per_billet_m`. The synthetic examples below use that canonical total. Legacy `front_scrap_m` remains per billet for p=1 and per sequential pull for p=2; migrate explicitly with a verified family. Canonical and non-null legacy inputs cannot be combined. See [explicit migration and public event counters](docs/user-guide/trim-topology.md).
 
@@ -183,7 +183,7 @@ case.replace(exits=3, exit_speed_m_min=22)
 
 ## 8. JSON
 
-Schema `1.1` is the current write format. Schemas `0.2` through `1.0` remain readable.
+Automatic cases retain schema `1.1`; explicit production-family selections require schema `1.2`. Schemas `0.2` through `1.0` remain readable. Use the case helpers to select the appropriate schema.
 
 ```python
 from pyextrusion import (

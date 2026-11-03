@@ -1,6 +1,14 @@
 # JSON workflows
 
-PyExtrusion writes **schema version 1.1**. Historical schemas `0.2` through `1.0` remain readable.
+Automatic cases write **schema version 1.1**. Historical schemas `0.2` through `1.0` remain readable. PyExtrusion **0.20.0** writes **1.2** when a production family is explicitly selected.
+
+## Explicit production family
+
+The optional `configuration` and `billets_per_pull` belong in `process` for a planning case or `production` for a study case. For example, `"configuration": "k_billets_1_profile", "billets_per_pull": 3` fixes three contributions per complete pull. `"1_billet_2_profiles"` means two sequential pulls, independently of die exits.
+
+Case helpers choose schema 1.2 for explicit selections. Saving or loading those inputs under an older schema is rejected. Automatic cases omit the selector keys and retain schema 1.1. A mixed sequence requires outer schema 1.2; its nested selected cases also require 1.2, explicitly or inherited from the outer envelope. Earlier PyExtrusion readers reject 1.2, preventing silent loss of the selected family.
+
+`selected_configuration` governs calculated production. `recommended_configuration` and `automatic_recommendation` retain the automatic reference. `requested_configuration_result` includes the rejected candidate and reasons if the selection is infeasible. See [production-family selection](../user-guide/production-family.md).
 
 ## Canonical trim in 0.19.0
 
@@ -114,7 +122,7 @@ For transition compatibility, planning JSON also emits a deprecated `reference` 
 
 ## ProductionSequence input JSON
 
-A JSON format is available for a user-supplied order list. The sequence uses the existing schema version `1.1`; no new core persistence schema is required.
+A JSON format is available for a user-supplied order list. The automatic sequence example below uses schema `1.1`; sequences containing explicit production-family selections require schema `1.2`.
 
 ```json
 {
@@ -193,9 +201,9 @@ Current serialized press names use:
 Historical aliases remain readable where documented. `billet_area_m2_override` may be accepted in old files for compatibility but is ignored by the current engine; billet area is derived from `billet_diameter_mm`.
 
 
-## Strict input handling in schema 1.1
+## Strict input handling in schemas 1.1 and 1.2
 
-Schema 1.1 writes and expects finite JSON numbers. `NaN`, `Infinity` and `-Infinity` are rejected. Numeric strings such as `"7000"` are not silently converted to numbers, and structural integer fields do not accept fractional values or booleans.
+Schemas 1.1 and 1.2 write and expect finite JSON numbers. `NaN`, `Infinity` and `-Infinity` are rejected. Numeric strings such as `"7000"` are not silently converted to numbers, and structural integer fields do not accept fractional values or booleans.
 
 Important ranges include cut length 1000-15000 mm, table length 10-100 m, nominal press size 6-16 in, exit speed 1-100 m/min, dead time 5-30 s, and kerfs of 0 or 3-10 mm.
 

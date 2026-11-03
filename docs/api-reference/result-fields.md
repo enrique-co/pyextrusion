@@ -1,6 +1,8 @@
 # Result field glossary
 
-PyExtrusion 0.19.0. These are the exact structured production result paths for `result.value()`, `result.select()` and the CLI. Trim/event fields are additive. See [trim topology and legacy migration](../user-guide/trim-topology.md) for canonical units, retained compatibility names, partial pulls and commercial positions versus physical events. Engineering and Economics expose their own result objects.
+PyExtrusion 0.20.0. These are the exact structured production result paths for `result.value()`, `result.select()` and the CLI. Trim/event fields are additive. See [trim topology and legacy migration](../user-guide/trim-topology.md) for canonical units, retained compatibility names, partial pulls and commercial positions versus physical events. Engineering and Economics expose their own result objects.
+
+PyExtrusion **0.20.0** adds the four selection/source paths below. See [production-family selection](../user-guide/production-family.md) for the input contract. `recommended_configuration` remains the automatic reference for the current inputs and cuts; `selected_configuration` identifies the family actually used. Full candidate objects are available as `automatic_recommendation` and `requested_configuration_result` on process/calculation results, outside the scalar field-selector glossary.
 
 | Field | Unit | Type | Description |
 |---|---|---|---|
@@ -8,7 +10,11 @@ PyExtrusion 0.19.0. These are the exact structured production result paths for `
 | `status.supported` | bool | `bool` | Whether the scenario is covered by the current PyExtrusion calculation model. |
 | `status.unsupported_reason` | text | `str or null` | Controlled explanation when the scenario is outside the supported model. |
 | `status.required_profiles_per_billet` | profiles/billet | `int or null` | Minimum profiles per billet detected when the case would require more than the supported maximum of two. |
-| `status.recommended_configuration` | text | `str or null` | Recommended supported configuration family after billet-first optimisation. |
+| `status.recommended_configuration` | text | `str or null` | Automatic recommendation for the same process and cuts, even when an explicit choice is used. |
+| `status.selected_configuration` | text | `str or null` | Family actually used; null when the requested choice is not viable. Added in 0.20.0. |
+| `status.requested_configuration` | text | `str or null` | Explicit requested family; null preserves automatic selection. Added in 0.20.0. |
+| `status.requested_billets_per_pull` | billets/pull | `int or null` | Exact requested number of contributions for the multibillet family. Added in 0.20.0. |
+| `status.configuration_source` | text | `str` | automatic or user_override. Added in 0.20.0. |
 | `geometry.profile_section_per_exit_m2` | m² | `float` | Cross-sectional area of one profile exit. |
 | `geometry.profile_section_total_m2` | m² | `float` | Total profile cross-sectional area across all exits. |
 | `geometry.container_area_m2` | m² | `float` | Internal container-bore area used for extrusion ratio and ram-speed calculations. |

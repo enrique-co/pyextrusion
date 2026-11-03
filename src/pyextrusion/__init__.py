@@ -49,7 +49,7 @@ from .models import (
     CalculationResult, ProcessResult, ComparisonResult, ConfigurationResult,
     StatusResult, GeometryResult, BilletResult, ProductionResult, ScrapResult,
     ProductivityResult, TimingResult, ProcessTraceResult,
-    SawSpec, ButtRule, ProfileType, CanonicalProfileType, PROFILE_TYPE_ALIASES,
+    SawSpec, ButtRule, ProfileType, CanonicalProfileType, ConfigurationName, PROFILE_TYPE_ALIASES,
     PROFILE_TYPE_VALID_VALUES, normalize_profile_type,
 )
 from .reporting import (
@@ -97,7 +97,7 @@ __all__ = [
     "StudyCase", "StudyInput", "CalculationResult", "ProcessResult", "ComparisonResult", "ConfigurationResult",
     "StatusResult", "GeometryResult", "BilletResult", "ProductionResult", "ScrapResult",
     "ProductivityResult", "TimingResult", "ProcessTraceResult",
-    "SawSpec", "ButtRule", "ProfileType", "CanonicalProfileType", "PROFILE_TYPE_ALIASES",
+    "SawSpec", "ButtRule", "ProfileType", "CanonicalProfileType", "ConfigurationName", "PROFILE_TYPE_ALIASES",
     "PROFILE_TYPE_VALID_VALUES", "normalize_profile_type",
     "AnnualDemandSpec", "NormalizedAnnualDemand", "AnnualCalculationResult",
     "PlanningMode", "PlanningRequest", "PlanningResult",

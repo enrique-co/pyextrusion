@@ -10,6 +10,8 @@ Recalculate on the intended press after migration. Loading an old file or choosi
 
 ## Main objects
 
+In **0.20.0**, `Process`, `Production`, low-level inputs and `calculate_simple` also accept `configuration` and, for the multibillet family, an exact `billets_per_pull`. Omitted selectors keep automatic behavior. See [production-family selection](../user-guide/production-family.md) for feasible/infeasible results, cuts and sequential-pull semantics.
+
 ```python
 from pyextrusion import (
     Press,
@@ -276,7 +278,7 @@ The new comparison APIs require at least two presses, preserve press order, use 
 
 Advanced analytical helpers live in `pyextrusion.engineering`. See the
 [Engineering API](engineering.md) for complete mechanical and thermal examples
-using the public 0.19.0 interface.
+using the public 0.20.0 interface.
 
 Deterministic production-cost and sales-margin calculations live in
 `pyextrusion.economics`. See the [Economics API](economics.md).

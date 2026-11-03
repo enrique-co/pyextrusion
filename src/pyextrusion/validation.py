@@ -8,6 +8,7 @@ from .demand import AnnualDemandSpec
 from .errors import PyExtrusionError
 from .io import load_annual_demand_json, load_case_json, load_planning_case_json, load_press_json, load_study_json, load_production_sequence_json
 from .models import PlanningCase, PressSpec, ProcessSpec, ProductionSpec, ProfileSpec, StudyCase, StudyInput
+from ._selection import validate_selection
 
 
 @dataclass(frozen=True)
@@ -16,6 +17,15 @@ class ValidationMessage:
     field: str
     message: str
     code: str | None = None
+
+
+def _selection_messages(value, *, prefix: str) -> list[ValidationMessage]:
+    try:
+        validate_selection(value.configuration, value.billets_per_pull, prefix=prefix)
+    except PyExtrusionError as exc:
+        field = "billets_per_pull" if ".billets_per_pull" in str(exc) else "configuration"
+        return [ValidationMessage("error", f"{prefix}.{field}", str(exc), exc.code)]
+    return []
 
 
 def validate_press(press: PressSpec) -> tuple[ValidationMessage, ...]:
@@ -106,7 +116,7 @@ def _validate_profile(profile: ProfileSpec) -> list[ValidationMessage]:
 
 
 def _validate_process(process: ProcessSpec) -> list[ValidationMessage]:
-    out: list[ValidationMessage] = []
+    out = _selection_messages(process, prefix="process")
     fields = [
         (process.exit_speed_m_min is None or 1 <= process.exit_speed_m_min <= 100, "process.exit_speed_m_min", "must be between 1 and 100 m/min when provided"),
         (1000 <= process.cut_length_mm <= 15000, "process.cut_length_mm", "must be between 1000 and 15000 mm"),
@@ -130,7 +140,7 @@ def _validate_process(process: ProcessSpec) -> list[ValidationMessage]:
 
 
 def _validate_production(production: ProductionSpec) -> list[ValidationMessage]:
-    out: list[ValidationMessage] = []
+    out = _selection_messages(production, prefix="production")
     fields = [
         (production.exit_speed_m_min is None or 1 <= production.exit_speed_m_min <= 100, "production.exit_speed_m_min", "must be between 1 and 100 m/min when provided"),
         (1000 <= production.cut_length_mm <= 15000, "production.cut_length_mm", "must be between 1000 and 15000 mm"),
@@ -179,6 +189,9 @@ def validate_planning_case(case: PlanningCase) -> tuple[ValidationMessage, ...]:
 
 
 def validate_study(study: StudyInput) -> tuple[ValidationMessage, ...]:
+    selection_errors = _selection_messages(study, prefix="production")
+    if selection_errors:
+        return tuple(selection_errors)
     out = list(validate_press(study.press)) + _validate_profile(study.profile) + _validate_production(study.to_case().production)
     if study.cut_length_mm > study.press.table_length_m * 1000:
         out.append(ValidationMessage("error", "production.cut_length_mm", "must not exceed press table length", "PX1003"))

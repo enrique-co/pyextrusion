@@ -27,6 +27,10 @@ _FIELD_LIST = (
     _f("status.unsupported_reason", "text", "str|null", "Controlled explanation when the scenario is outside the supported model."),
     _f("status.required_profiles_per_billet", "profiles/billet", "int|null", "Minimum profiles per billet detected when the case would require more than the supported maximum of two."),
     _f("status.recommended_configuration", "text", "str|null", "Recommended supported configuration family after billet-first optimisation."),
+    _f("status.selected_configuration", "text", "str|null", "Family actually used for geometry and production; null when the explicit choice is not viable."),
+    _f("status.requested_configuration", "text", "str|null", "Explicit production family requested by the caller; null preserves automatic selection."),
+    _f("status.requested_billets_per_pull", "billets/pull", "int|null", "Exact billet contributions requested for the multibillet family."),
+    _f("status.configuration_source", "text", "str", "automatic or user_override; distinct from the automatic recommendation."),
 
     _f("geometry.profile_section_per_exit_m2", "m²", "float", "Cross-sectional area of one profile exit."),
     _f("geometry.profile_section_total_m2", "m²", "float", "Total profile cross-sectional area across all exits."),

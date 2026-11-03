@@ -111,6 +111,14 @@ class PlanningResult:
         return self.process.recommended_configuration
 
     @property
+    def selected_configuration(self) -> str | None:
+        return self.process.selected_configuration
+
+    @property
+    def configuration_source(self) -> str:
+        return self.process.configuration_source
+
+    @property
     def billet_length_mm(self) -> float:
         return self.process.billet_length_mm
 
@@ -157,6 +165,8 @@ class PlanningResult:
             "complete_billets_only": self.complete_billets_only,
             "bars_per_billet": self.bars_per_billet,
             "recommended_configuration": self.recommended_configuration,
+            "selected_configuration": self.selected_configuration,
+            "configuration_source": self.configuration_source,
             "billet_length_mm": self.billet_length_mm,
             "recommended_billet_length_mm": self.recommended_billet_length_mm,
             "table_occupancy_length_m": self.table_occupancy_length_m,
@@ -390,15 +400,31 @@ def _calculate_time_window_plan(
     estimated = math.floor((available + d) / denominator) if denominator > 0 else 0
     billets = max(0, estimated)
 
-    time_used = _time_for_billets(press, process, billets)
+    exact_times = {0: 0.0}
+
+    def time_for_billets(count: int) -> float:
+        if process.configuration_source != "user_override":
+            return _time_for_billets(press, process, count)
+        # A partial multibillet pull has a different allocation of shared kerfs.
+        # Resolve the actual order with the same canonical engine rather than
+        # multiplying nominal full-pull geometry by a fractional pull count.
+        if count not in exact_times:
+            try:
+                actual = calculate_case(press, _operational_case(case, count * process.bars_per_billet))
+            except (InvalidProductionInputError, OverflowError) as exc:
+                raise InvalidPlanningRequestError(f"planning target is outside the supported numeric range: {exc}") from exc
+            exact_times[count] = actual.timing.total_min
+        return exact_times[count]
+
+    time_used = time_for_billets(billets)
     while billets > 0 and time_used > available + 1e-9:
         billets -= 1
-        time_used = _time_for_billets(press, process, billets)
-    while _time_for_billets(press, process, billets + 1) <= available + 1e-9:
+        time_used = time_for_billets(billets)
+    while time_for_billets(billets + 1) <= available + 1e-9:
         billets += 1
-        time_used = _time_for_billets(press, process, billets)
+        time_used = time_for_billets(billets)
 
-    next_time = _time_for_billets(press, process, billets + 1)
+    next_time = time_for_billets(billets + 1)
     additional = max(0.0, next_time - available)
 
     if billets == 0:
