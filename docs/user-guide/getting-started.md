@@ -1,6 +1,6 @@
 # Installation and first steps
 
-This guide covers **PyExtrusion 0.19.0**. The synthetic example below uses canonical total trim per incoming billet. For older input files, follow [explicit legacy migration](trim-topology.md#legacy-api-and-json-migration).
+This guide covers **PyExtrusion 0.20.0**. The synthetic example below uses canonical total trim per incoming billet. For older input files, follow [explicit legacy migration](trim-topology.md#legacy-api-and-json-migration).
 
 ### Requirements
 
@@ -11,14 +11,14 @@ PyExtrusion requires **Python 3.10 or newer**.
 From PyPI:
 
 ```bash
-python -m pip install pyextrusion==0.19.0
+python -m pip install pyextrusion==0.20.0
 ```
 
 When validating a locally built release artifact instead, install that wheel
 explicitly:
 
 ```bash
-python -m pip install pyextrusion-0.19.0-py3-none-any.whl
+python -m pip install pyextrusion-0.20.0-py3-none-any.whl
 ```
 
 Verify the installation:
@@ -27,7 +27,7 @@ Verify the installation:
 pyextrusion info
 ```
 
-The output should identify PyExtrusion 0.19.0 and RELEASED.
+The output should identify PyExtrusion 0.20.0 and RELEASED.
 
 ### Recommended: use a virtual environment
 
@@ -36,7 +36,7 @@ The output should identify PyExtrusion 0.19.0 and RELEASED.
 ```powershell
 py -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
-.venv\Scripts\python -m pip install pyextrusion==0.19.0
+.venv\Scripts\python -m pip install pyextrusion==0.20.0
 ```
 
 #### Linux / macOS
@@ -44,7 +44,7 @@ py -m venv .venv
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install pyextrusion==0.19.0
+.venv/bin/python -m pip install pyextrusion==0.20.0
 ```
 
 ### Your first PyExtrusion objects

@@ -16,7 +16,7 @@ hide:
       <a class="px-button px-button--primary" href="user-guide/getting-started/">Get started <span aria-hidden="true">↗</span></a>
       <a class="px-button px-button--secondary" href="https://github.com/enrique-co/pyextrusion">Explore GitHub <span aria-hidden="true">↗</span></a>
     </div>
-    <p class="px-hero__meta"><span>v0.19.0</span><span>Python ≥ 3.10</span><span>Apache-2.0</span></p>
+    <p class="px-hero__meta"><span>v0.20.0</span><span>Python ≥ 3.10</span><span>Apache-2.0</span></p>
   </div>
   <figure class="px-hero__art">
     <img src="assets/brand/hero-840.webp" srcset="assets/brand/hero-840.webp 840w, assets/brand/hero-1672.webp 1672w" sizes="(min-width: 1000px) 58vw, 92vw" width="1672" height="941" fetchpriority="high" alt="Technical pencil drawing of an aluminium extrusion profile with the blue π flower and the PyExtrusion signature: A beautiful extrusion.">
@@ -144,7 +144,7 @@ print(round(plan.time_used_min, 2))  # 53.54
     <div><p class="px-eyebrow">DESIGNED FOR PYTHON. BUILT FOR EXTRUSION.</p><h2 id="start-title">Put the engineering<br>into your workflow.</h2><p>Use the Python API in your applications and analysis tools,<br class="px-desktop-break"> or work with the JSON and command-line interfaces.</p><a class="px-text-link" href="user-guide/getting-started/">Your first calculation <span aria-hidden="true">↗</span></a></div>
     <div class="px-terminal">
       <div class="px-terminal__bar"><span><i></i><i></i><i></i></span><span>INSTALL · PYTHON ≥ 3.10</span></div>
-      <div class="px-install"><span aria-hidden="true">$</span><code id="px-install-command">pip install pyextrusion==0.19.0</code><button type="button" class="px-copy" data-copy="px-install-command" aria-label="Copy installation command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></svg></button></div>
+      <div class="px-install"><span aria-hidden="true">$</span><code id="px-install-command">pip install pyextrusion==0.20.0</code><button type="button" class="px-copy" data-copy="px-install-command" aria-label="Copy installation command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></svg></button></div>
       <p id="px-copy-status" class="px-copy-status" role="status" aria-live="polite">Ready for your next calculation.</p>
       <div class="px-terminal__links"><a href="api-reference/python-api/">Python API ↗</a><a href="api-reference/json/">JSON ↗</a><a href="api-reference/cli/">CLI ↗</a></div>
     </div>
@@ -154,5 +154,5 @@ print(round(plan.time_used_min, 2))  # 53.54
 <section class="px-resources px-shell" aria-labelledby="resources-title">
   <div class="px-resources__intro"><img src="assets/brand/flower-96.webp" srcset="assets/brand/flower-288.webp 3x" width="96" height="72" alt="" loading="lazy"><div><p class="px-eyebrow">KEEP EXPLORING</p><h2 id="resources-title">The detail is in the documentation.</h2></div></div>
   <div class="px-resource-links"><a href="user-guide/"><span>Learn the workflow</span><strong>User Guide <span aria-hidden="true">↗</span></strong></a><a href="technical-reference/"><span>Understand the calculations</span><strong>Technical Reference <span aria-hidden="true">↗</span></strong></a><a href="api-reference/"><span>Build your integration</span><strong>API Reference <span aria-hidden="true">↗</span></strong></a><a href="examples/"><span>Start from a working pattern</span><strong>Examples <span aria-hidden="true">↗</span></strong></a></div>
-  <p class="px-release-note"><strong>Updating an existing project?</strong> v0.19.0 introduces canonical total trim per incoming billet. Review <a href="user-guide/trim-topology/">trim topology &amp; legacy migration</a> and <a href="technical-reference/geometry/#physical-butt-and-equivalent-incoming-billet-length">physical butt geometry</a> before reusing older inputs.</p>
+  <p class="px-release-note"><strong>Updating an existing project?</strong> v0.20.0 adds <a href="user-guide/production-family/">explicit production-family selection</a> when changing cuts. Automatic mode retains the 0.19.0 behavior. Review <a href="user-guide/trim-topology/">trim topology &amp; legacy migration</a> before reusing older inputs.</p>
 </section>

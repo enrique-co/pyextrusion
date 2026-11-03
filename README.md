@@ -8,11 +8,10 @@
 
 **Engineering calculation toolkit for aluminium extrusion**
 
-**Development version: 0.20.0.dev0 (unreleased).** This branch adds explicit production-family selection while preserving automatic-mode calculations. See the [production-family guide](docs/user-guide/production-family.md) and the unreleased [changelog](CHANGELOG.md). The stable release described below remains 0.19.0.
 
-Version: **0.19.0** — 2026-10-03. Reference: [tag v0.19.0](https://github.com/enrique-co/pyextrusion/tree/v0.19.0), commit `9f7f4b495c63ba671e7412fa76e655dc068216d4`.
+Version: **0.20.0** — 2026-11-03. Reference: [tag v0.20.0](https://github.com/enrique-co/pyextrusion/tree/v0.20.0).
 
-0.19.0 adds `trim_total_per_billet_m`, explicit legacy migration, and corrected positive-trim multibillet final-saw events, including partial pulls. Read the [trim contract and migration guide](docs/user-guide/trim-topology.md) before migrating sequential-pull data. New examples below use the canonical total. Retain the original legacy file and migrate with a verified family; do not mechanically rename `front_scrap_m` in existing p=2 data.
+Since 0.19.0, PyExtrusion provides `trim_total_per_billet_m`, explicit legacy migration, and corrected positive-trim multibillet final-saw events, including partial pulls. Read the [trim contract and migration guide](docs/user-guide/trim-topology.md) before migrating sequential-pull data. New examples below use the canonical total. Retain the original legacy file and migrate with a verified family; do not mechanically rename `front_scrap_m` in existing p=2 data.
 
 Version 0.18.0 corrects `butt_mm` as physical residual thickness inside the container: butt mass uses the container section, then converts once to incoming-billet equivalent length. Existing physical mm inputs and the measured incoming-billet coefficient override remain supported. Calculated lengths, losses and feasibility may differ from 0.17.0; see the [changelog](CHANGELOG.md).
 
@@ -31,7 +30,16 @@ PyExtrusion includes a source-traced engineering layer, basic deterministic econ
 - **Economics** — recurring production cost, material/scrap economics,
   tooling/development cost and sales-margin calculations.
 
-## What changed in 0.19.0
+## What changed in 0.20.0
+
+- Select one pull per billet, two sequential pulls per billet, or an exact number of billets per continuous pull with `configuration` and `billets_per_pull`.
+- Reduce commercial cuts within the selected family while the engine calculates the corresponding billet length. Infeasible requests report reasons without switching families.
+- Distinguish the selected production result from the automatic recommendation for the same current inputs and cuts.
+- Persist explicit choices with JSON schema 1.2; automatic inputs retain schema 1.1 and their previous behavior.
+
+See the [production-family guide](docs/user-guide/production-family.md). This is an operating choice, not an assessment of die strength.
+
+## Retained from 0.19.0
 
 - Defines total trim per incoming billet and divides it across sequential pulls.
 - Provides explicit legacy migration, without silent input precedence.
@@ -52,13 +60,13 @@ PyExtrusion includes a source-traced engineering layer, basic deterministic econ
 From PyPI:
 
 ```bash
-python -m pip install pyextrusion==0.19.0
+python -m pip install pyextrusion==0.20.0
 ```
 
 From a locally built release wheel:
 
 ```bash
-python -m pip install pyextrusion-0.19.0-py3-none-any.whl
+python -m pip install pyextrusion-0.20.0-py3-none-any.whl
 ```
 
 ## Quick calculation
@@ -205,7 +213,7 @@ Publicly documented calculations include:
 
 ## Model boundary
 
-PyExtrusion 0.19.0 models **direct aluminium extrusion**. It does not perform full industrial scheduling or complete extrusion-force, thermal, metallurgical, die-life or plant-resource prediction.
+PyExtrusion 0.20.0 models **direct aluminium extrusion**. It does not perform full industrial scheduling or complete extrusion-force, thermal, metallurgical, die-life or plant-resource prediction.
 
 The mechanical result is `F_baseline`, an equivalent-axisymmetric baseline. A
 comparison `F_reserve = F_press - F_baseline` is only a screening indicator; it is not

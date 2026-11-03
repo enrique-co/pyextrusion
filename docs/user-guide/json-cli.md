@@ -2,7 +2,7 @@
 
 PyExtrusion can be used without writing a full Python application.
 
-Use the [canonical JSON examples](../api-reference/json.md) for 0.19.0. `trim_total_per_billet_m` is total rejection per incoming billet. Legacy files retain their old meaning and require [explicit Python migration](trim-topology.md#legacy-api-and-json-migration), not just renaming a key. Canonical trim plus any non-null legacy trim (including zero) is rejected.
+Use the [canonical JSON examples](../api-reference/json.md) for 0.20.0. `trim_total_per_billet_m` is total rejection per incoming billet. Legacy files retain their old meaning and require [explicit Python migration](trim-topology.md#legacy-api-and-json-migration), not just renaming a key. Canonical trim plus any non-null legacy trim (including zero) is rejected.
 
 ### Command line identity
 

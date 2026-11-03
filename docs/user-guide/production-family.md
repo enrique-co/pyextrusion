@@ -1,6 +1,6 @@
 # Choose a production family
 
-This feature is available on the development branch as **0.20.0.dev0 (unreleased)**. It is not part of the published 0.19.0 release.
+Explicit production-family selection is available in **PyExtrusion 0.20.0**.
 
 `ProcessSpec` and `ProductionSpec` accept two optional inputs:
 
