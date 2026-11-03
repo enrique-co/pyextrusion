@@ -10,6 +10,8 @@ Recalculate on the intended press after migration. Loading an old file or choosi
 
 ## Main objects
 
+In **0.20.0.dev0 (unreleased)**, `Process`, `Production`, low-level inputs and `calculate_simple` also accept `configuration` and, for the multibillet family, an exact `billets_per_pull`. Omitted selectors keep automatic behavior. See [production-family selection](../user-guide/production-family.md) for feasible/infeasible results, cuts and sequential-pull semantics.
+
 ```python
 from pyextrusion import (
     Press,

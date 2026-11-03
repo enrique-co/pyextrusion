@@ -590,8 +590,8 @@ def test_v080_unknown_case_adjustment_has_px1010():
 def test_v080_field_glossary_is_complete_and_describable():
     from pyextrusion import list_fields, describe_field, FIELD_GLOSSARY
     fields = list_fields()
-    assert len(fields) == 109
-    assert len(FIELD_GLOSSARY) == 109
+    assert len(fields) == 113
+    assert len(FIELD_GLOSSARY) == 113
     assert {"billet.butt_mass_kg", "billet.butt_equivalent_billet_mm", "billet.mass_coefficient_source"} <= {field.path for field in fields}
     info = describe_field("scrap.total_kg")
     assert info.unit == "kg"

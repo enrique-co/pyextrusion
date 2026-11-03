@@ -1,6 +1,14 @@
 # JSON workflows
 
-PyExtrusion writes **schema version 1.1**. Historical schemas `0.2` through `1.0` remain readable.
+Automatic cases write **schema version 1.1**. Historical schemas `0.2` through `1.0` remain readable. The development version **0.20.0.dev0 (unreleased)** writes **1.2** when a production family is explicitly selected.
+
+## Explicit production family in development
+
+The optional `configuration` and `billets_per_pull` belong in `process` for a planning case or `production` for a study case. For example, `"configuration": "k_billets_1_profile", "billets_per_pull": 3` fixes three contributions per complete pull. `"1_billet_2_profiles"` means two sequential pulls, independently of die exits.
+
+Case helpers choose schema 1.2 for explicit selections. Saving or loading those inputs under an older schema is rejected. Automatic cases omit the selector keys and retain schema 1.1. A mixed sequence requires outer schema 1.2; its nested selected cases also require 1.2, explicitly or inherited from the outer envelope. Earlier PyExtrusion readers reject 1.2, preventing silent loss of the selected family.
+
+`selected_configuration` governs calculated production. `recommended_configuration` and `automatic_recommendation` retain the automatic reference. `requested_configuration_result` includes the rejected candidate and reasons if the selection is infeasible. See [production-family selection](../user-guide/production-family.md).
 
 ## Canonical trim in 0.19.0
 

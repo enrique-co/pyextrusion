@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.20.0.dev0 — Unreleased development version
+
+- Adds optional `configuration` to select a production family and exact `billets_per_pull` for multibillet pulls. Omitted selectors preserve the 0.19.0 automatic path.
+- Resolves geometry, quantities, physical losses, saw events, dead times and productivity from the requested concept. Infeasible explicit choices never fall back to another family.
+- Separates `selected_configuration` and request/source trace from the original automatic recommendation for the same process and cuts; includes full candidate details and rejection reasons.
+- Propagates selection through public process/study APIs, all planning modes, comparisons, sequences, CLI JSON and serialization. Selected cases use schema 1.2; automatic input JSON remains schema 1.1.
+- Uses canonical actual-order times for explicit-selection time windows, including shared kerfs on a partial last multibillet pull. Keeps the legacy automatic time-window path unchanged.
+- Adds synthetic public selection, balance, boundary, JSON, CLI and compatibility regressions. Plant-specific acceptance checks remain outside the public source and distributions.
+- No engineering equations or constitutive parameters change. This development version has not been published.
+
 ## Documentation maintenance for 0.19.0
 
 Documentation-only changes; no new package release or calculation change:

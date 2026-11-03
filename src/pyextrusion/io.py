@@ -15,6 +15,7 @@ from .models import (
     StudyCase,
     StudyInput,
 )
+from ._selection import case_schema
 from .demand import AnnualDemandSpec
 from .planning import PlanningRequest
 from .sequence import ProductionOrder
@@ -24,7 +25,7 @@ from .errors import (
     InvalidProductionSequenceError,
 )
 
-SUPPORTED_SCHEMA_VERSIONS = {"0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0", "1.1"}
+SUPPORTED_SCHEMA_VERSIONS = {"0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0", "1.1", "1.2"}
 CURRENT_SCHEMA_VERSION = "1.1"
 
 _PRESS_PROVENANCE_KEY = "_provenance"
@@ -150,9 +151,10 @@ def process_from_dict(d: dict) -> ProcessSpec:
 
 def planning_case_from_dict(d: dict) -> PlanningCase:
     d = _require_mapping(d, "planning_case")
-    _check_schema(d)
+    schema = _check_schema(d)
     profile_data = _require_mapping(d.get("profile"), "profile")
     process_data = _require_mapping(d.get("process"), "process")
+    case_schema(schema, process_data.get("configuration"))
     try:
         profile = ProfileSpec(**profile_data)
     except TypeError as exc:
@@ -162,9 +164,10 @@ def planning_case_from_dict(d: dict) -> PlanningCase:
 
 def case_from_dict(d: dict) -> StudyCase:
     d = _require_mapping(d, "case")
-    _check_schema(d)
+    schema = _check_schema(d)
     profile_data = _require_mapping(d.get("profile"), "profile")
     production_data = _require_mapping(d.get("production"), "production")
+    case_schema(schema, production_data.get("configuration"))
     try:
         profile = ProfileSpec(**profile_data)
     except TypeError as exc:
@@ -184,15 +187,15 @@ def press_to_dict(press: PressSpec, *, schema_version: str = CURRENT_SCHEMA_VERS
     return {"schema_version": schema_version, "press": _press_dict_with_provenance(press)}
 
 
-def case_to_dict(case: StudyCase, *, schema_version: str = CURRENT_SCHEMA_VERSION) -> dict:
+def case_to_dict(case: StudyCase, *, schema_version: str | None = None) -> dict:
     return case.to_dict(schema_version=schema_version)
 
 
-def planning_case_to_dict(case: PlanningCase, *, schema_version: str = CURRENT_SCHEMA_VERSION) -> dict:
+def planning_case_to_dict(case: PlanningCase, *, schema_version: str | None = None) -> dict:
     return case.to_dict(schema_version=schema_version)
 
 
-def study_to_dict(study: StudyInput, *, schema_version: str = CURRENT_SCHEMA_VERSION) -> dict:
+def study_to_dict(study: StudyInput, *, schema_version: str | None = None) -> dict:
     data = study.to_case().to_dict(schema_version=schema_version)
     data["press"] = _press_dict_with_provenance(study.press)
     return data
@@ -268,7 +271,8 @@ def production_order_to_dict(order: ProductionOrder) -> dict:
     if not isinstance(order, ProductionOrder):
         raise InvalidProductionSequenceError("production_order must be a ProductionOrder")
     case_data = order.case.to_dict()
-    case_data.pop("schema_version", None)
+    if case_data.get("schema_version") == "1.1":
+        case_data.pop("schema_version", None)
     return {
         "order_id": order.order_id,
         "case": case_data,
@@ -301,7 +305,14 @@ def production_sequence_from_dict(d: dict) -> tuple[PressSpec, tuple[ProductionO
     if not isinstance(raw_orders, list) or not raw_orders:
         raise InvalidProductionSequenceError("production_sequence.orders must be a non-empty JSON array")
     press = press_from_dict(_require_mapping(d["press"], "production_sequence.press"), schema_version=schema)
-    orders = tuple(production_order_from_dict(item) for item in raw_orders)
+    inherited_orders = []
+    for item in raw_orders:
+        item = dict(_require_mapping(item, "production_sequence.orders[]"))
+        case_data = dict(_require_mapping(item.get("case"), "production_order.case"))
+        case_data.setdefault("schema_version", schema)
+        case_schema(schema, _require_mapping(case_data.get("process"), "process").get("configuration"))
+        inherited_orders.append(production_order_from_dict({**item, "case": case_data}))
+    orders = tuple(inherited_orders)
     start_at = _parse_sequence_start_at(d.get("start_at"))
     return press, orders, start_at
 
@@ -311,7 +322,7 @@ def production_sequence_to_dict(
     orders: Iterable[ProductionOrder],
     *,
     start_at: datetime | None = None,
-    schema_version: str = CURRENT_SCHEMA_VERSION,
+    schema_version: str | None = None,
 ) -> dict:
     if not isinstance(press, PressSpec):
         raise InvalidProductionSequenceError("production_sequence.press must be a PressSpec")
@@ -323,8 +334,11 @@ def production_sequence_to_dict(
         raise InvalidProductionSequenceError("production_sequence.orders must be iterable") from exc
     if not items:
         raise InvalidProductionSequenceError("production_sequence.orders must contain at least one order")
+    if any(not isinstance(order, ProductionOrder) for order in items):
+        raise InvalidProductionSequenceError("production_sequence.orders must contain ProductionOrder values")
+    has_selection = next((order.case.process.configuration for order in items if order.case.process.configuration is not None), None)
     return {
-        "schema_version": schema_version,
+        "schema_version": case_schema(schema_version, has_selection),
         "press": _press_dict_with_provenance(press),
         "start_at": start_at.isoformat() if start_at is not None else None,
         "orders": [production_order_to_dict(order) for order in items],

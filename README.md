@@ -8,6 +8,8 @@
 
 **Engineering calculation toolkit for aluminium extrusion**
 
+**Development version: 0.20.0.dev0 (unreleased).** This branch adds explicit production-family selection while preserving automatic-mode calculations. See the [production-family guide](docs/user-guide/production-family.md) and the unreleased [changelog](CHANGELOG.md). The stable release described below remains 0.19.0.
+
 Version: **0.19.0** — 2026-10-03. Reference: [tag v0.19.0](https://github.com/enrique-co/pyextrusion/tree/v0.19.0), commit `9f7f4b495c63ba671e7412fa76e655dc068216d4`.
 
 0.19.0 adds `trim_total_per_billet_m`, explicit legacy migration, and corrected positive-trim multibillet final-saw events, including partial pulls. Read the [trim contract and migration guide](docs/user-guide/trim-topology.md) before migrating sequential-pull data. New examples below use the canonical total. Retain the original legacy file and migrate with a verified family; do not mechanically rename `front_scrap_m` in existing p=2 data.

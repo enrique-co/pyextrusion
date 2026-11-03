@@ -14,6 +14,7 @@ from .errors import (
 )
 from .fields import RESULT_SECTIONS, list_fields
 from ._strict import require_bool, require_int, require_kerf, require_number, require_string
+from ._selection import ConfigurationName, validate_selection, input_dict, case_schema
 
 ProfileType = Literal["solid", "plate", "hollow", "tubular"]
 CanonicalProfileType = Literal["solid", "hollow"]
@@ -43,11 +44,6 @@ def normalize_profile_type(value: str | None) -> CanonicalProfileType:
 
 
 Complexity = Literal["normal", "medium", "high"]
-ConfigurationName = Literal[
-    "1_billet_1_profile",
-    "k_billets_1_profile",
-    "1_billet_2_profiles",
-]
 
 DEFAULT_CONTAINER_DIAMETER_FACTOR = 1.035
 DEFAULT_DEAD_TIME_SEC = 15.0
@@ -488,6 +484,11 @@ class ProcessSpec:
     ``trim_total_per_billet_m`` is total reject reserve per incoming billet.
     Legacy ``front_scrap_m`` remains per sequential pull when p=2. Never combine
     the canonical input with a non-None legacy trim field.
+
+    ``configuration=None`` preserves automatic family selection. An explicit
+    family is never substituted; ``k_billets_1_profile`` additionally requires
+    an exact integer ``billets_per_pull >= 2``. Cuts then refer to each billet
+    contribution (p=1) or each sequential pull (p=2).
     """
 
     exit_speed_m_min: float | None
@@ -499,8 +500,11 @@ class ProcessSpec:
     multi_billet_front_scrap_m: float | None = None
     ram_speed_mm_s: float | None = None
     trim_total_per_billet_m: float | None = None
+    configuration: ConfigurationName | None = None
+    billets_per_pull: int | None = None
 
     def __post_init__(self) -> None:
+        validate_selection(self.configuration, self.billets_per_pull, prefix="process")
         if (self.exit_speed_m_min is None) == (self.ram_speed_mm_s is None):
             raise InvalidProductionInputError("process must define exactly one of exit_speed_m_min or ram_speed_mm_s")
         if self.exit_speed_m_min is not None:
@@ -525,7 +529,7 @@ class ProcessSpec:
         return cls(exit_speed_m_min=None, cut_length_mm=cut_length_mm, ram_speed_mm_s=ram_speed_mm_s, **kwargs)
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return input_dict(self)
 
 
 @dataclass(frozen=True)
@@ -535,9 +539,9 @@ class PlanningCase:
     profile: ProfileSpec
     process: ProcessSpec
 
-    def to_dict(self, *, schema_version: str = "1.1") -> dict[str, Any]:
+    def to_dict(self, *, schema_version: str | None = None) -> dict[str, Any]:
         return {
-            "schema_version": schema_version,
+            "schema_version": case_schema(schema_version, self.process.configuration),
             "profile": self.profile.to_dict(),
             "process": self.process.to_dict(),
         }
@@ -576,6 +580,8 @@ class PlanningCase:
             butt_mm=q.butt_mm,
             multi_billet_front_scrap_m=q.multi_billet_front_scrap_m,
             ram_speed_mm_s=q.ram_speed_mm_s,
+            configuration=q.configuration,
+            billets_per_pull=q.billets_per_pull,
         )
 
     def to_study_case(self, bars_requested: int = 1, *, supplement_10_pct: bool = False) -> "StudyCase":
@@ -594,6 +600,8 @@ class PlanningCase:
                 multi_billet_front_scrap_m=q.multi_billet_front_scrap_m,
                 supplement_10_pct=supplement_10_pct,
                 ram_speed_mm_s=q.ram_speed_mm_s,
+                configuration=q.configuration,
+                billets_per_pull=q.billets_per_pull,
             ),
         )
 
@@ -604,6 +612,8 @@ class ProductionSpec:
 
     ``butt_mm`` is physical residual thickness inside the container. Callers
     must not pre-convert it to an incoming-billet equivalent length.
+    ``configuration`` and ``billets_per_pull`` have the same meaning as in
+    ProcessSpec and are preserved by all planning/study conversions.
     """
 
     exit_speed_m_min: float | None
@@ -617,8 +627,11 @@ class ProductionSpec:
     supplement_10_pct: bool = False
     ram_speed_mm_s: float | None = None
     trim_total_per_billet_m: float | None = None
+    configuration: ConfigurationName | None = None
+    billets_per_pull: int | None = None
 
     def __post_init__(self) -> None:
+        validate_selection(self.configuration, self.billets_per_pull, prefix="production")
         if (self.exit_speed_m_min is None) == (self.ram_speed_mm_s is None):
             raise InvalidProductionInputError("production must define exactly one of exit_speed_m_min or ram_speed_mm_s")
         if self.exit_speed_m_min is not None:
@@ -645,7 +658,7 @@ class ProductionSpec:
         return cls(exit_speed_m_min=None, cut_length_mm=cut_length_mm, bars_requested=bars_requested, ram_speed_mm_s=ram_speed_mm_s, **kwargs)
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return input_dict(self)
 
 
 @dataclass(frozen=True)
@@ -655,9 +668,9 @@ class StudyCase:
     profile: ProfileSpec
     production: ProductionSpec
 
-    def to_dict(self, *, schema_version: str = "1.1") -> dict[str, Any]:
+    def to_dict(self, *, schema_version: str | None = None) -> dict[str, Any]:
         return {
-            "schema_version": schema_version,
+            "schema_version": case_schema(schema_version, self.production.configuration),
             "profile": self.profile.to_dict(),
             "production": self.production.to_dict(),
         }
@@ -713,6 +726,8 @@ class StudyCase:
                 butt_mm=p.butt_mm,
                 multi_billet_front_scrap_m=p.multi_billet_front_scrap_m,
                 ram_speed_mm_s=p.ram_speed_mm_s,
+                configuration=p.configuration,
+                billets_per_pull=p.billets_per_pull,
             ),
         )
 
@@ -732,6 +747,8 @@ class StudyCase:
             multi_billet_front_scrap_m=p.multi_billet_front_scrap_m,
             supplement_10_pct=p.supplement_10_pct,
             ram_speed_mm_s=p.ram_speed_mm_s,
+            configuration=p.configuration,
+            billets_per_pull=p.billets_per_pull,
         )
 
 
@@ -750,6 +767,8 @@ class ProcessInput:
     multi_billet_front_scrap_m: float | None = None
     ram_speed_mm_s: float | None = None
     trim_total_per_billet_m: float | None = None
+    configuration: ConfigurationName | None = None
+    billets_per_pull: int | None = None
 
 
 @dataclass(frozen=True)
@@ -768,6 +787,8 @@ class StudyInput:
     effective_bars_target_override: int | None = None
     ram_speed_mm_s: float | None = None
     trim_total_per_billet_m: float | None = None
+    configuration: ConfigurationName | None = None
+    billets_per_pull: int | None = None
 
     def to_case(self) -> StudyCase:
         return StudyCase(
@@ -784,6 +805,8 @@ class StudyInput:
                 multi_billet_front_scrap_m=self.multi_billet_front_scrap_m,
                 supplement_10_pct=self.supplement_10_pct,
                 ram_speed_mm_s=self.ram_speed_mm_s,
+                configuration=self.configuration,
+                billets_per_pull=self.billets_per_pull,
             ),
         )
 
@@ -878,6 +901,12 @@ class ProcessResult:
     trim_topology: str = "zero_trim_end_allowance"
     final_saw_events_per_pull: int = 0
     internal_billet_transitions_per_pull: int = 0
+    requested_configuration: ConfigurationName | None = None
+    requested_billets_per_pull: int | None = None
+    selected_configuration: ConfigurationName | None = None
+    configuration_source: str = "automatic"
+    automatic_recommendation: ConfigurationResult | None = None
+    requested_configuration_result: ConfigurationResult | None = None
 
     @property
     def first_billet_time_min(self) -> float:
@@ -897,6 +926,10 @@ class ProcessResult:
             "unsupported_reason": self.unsupported_reason,
             "required_profiles_per_billet": self.required_profiles_per_billet,
             "recommended_configuration": self.recommended_configuration,
+            "selected_configuration": self.selected_configuration,
+            "requested_configuration": self.requested_configuration,
+            "requested_billets_per_pull": self.requested_billets_per_pull,
+            "configuration_source": self.configuration_source,
         }
         data["first_billet_time_min"] = self.first_billet_time_min
         return data
@@ -913,6 +946,10 @@ class StatusResult(_ResultBlock):
     unsupported_reason: str | None
     required_profiles_per_billet: int | None
     recommended_configuration: ConfigurationName | None
+    selected_configuration: ConfigurationName | None = None
+    requested_configuration: ConfigurationName | None = None
+    requested_billets_per_pull: int | None = None
+    configuration_source: str = "automatic"
 
 
 @dataclass(frozen=True)
@@ -1047,6 +1084,10 @@ class ProcessTraceResult(_ResultBlock):
     trim_per_pull_m: float = 0.0
     trim_input_semantics: str = "default_zero"
     trim_topology: str = "zero_trim_end_allowance"
+    requested_configuration: ConfigurationName | None = None
+    requested_billets_per_pull: int | None = None
+    selected_configuration: ConfigurationName | None = None
+    configuration_source: str = "automatic"
 
 
 @dataclass(frozen=True)
@@ -1127,6 +1168,12 @@ class CalculationResult:
     timing: TimingResult
     process: ProcessTraceResult
     warnings: tuple[str, ...] = ()
+    requested_configuration: ConfigurationName | None = None
+    requested_billets_per_pull: int | None = None
+    selected_configuration: ConfigurationName | None = None
+    configuration_source: str = "automatic"
+    automatic_recommendation: ConfigurationResult | None = None
+    requested_configuration_result: ConfigurationResult | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

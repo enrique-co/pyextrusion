@@ -4,6 +4,30 @@ from .demand import AnnualCalculationResult
 from .models import CalculationResult, ComparisonResult, PressSpec
 
 
+def _actual_configuration(result) -> str | None:
+    if result.configuration_source == "user_override":
+        return result.selected_configuration
+    return result.selected_configuration or result.recommended_configuration
+
+
+def _selection_lines(result) -> list[str]:
+    if result.configuration_source != "user_override":
+        return []
+    metadata = result if hasattr(result, "requested_configuration") else result.process
+    lines = [
+        f"Requested config:        {metadata.requested_configuration}",
+        f"Selected config:         {result.selected_configuration or 'none'}",
+        f"Configuration source:    {result.configuration_source}",
+        f"Automatic recommendation: {result.recommended_configuration or 'none'}",
+    ]
+    if metadata.requested_billets_per_pull is not None:
+        lines.append(f"Requested billets/pull:  {metadata.requested_billets_per_pull}")
+    candidate = getattr(metadata, "requested_configuration_result", None)
+    if candidate is not None and not candidate.valid:
+        lines.extend(f"  - {reason}" for reason in candidate.reasons)
+    return lines
+
+
 def _yes_no(value: bool) -> str:
     return "YES" if value else "NO"
 
@@ -99,6 +123,7 @@ def format_result(result: CalculationResult) -> str:
         lines.append("Demand supplement:       10% included")
     if result.valid_configurations:
         lines.append("Valid configurations:    " + ", ".join(result.valid_configurations))
+    lines.extend(_selection_lines(result))
     if result.warnings:
         lines.append("Warnings:")
         lines.extend(f"  - {warning}" for warning in result.warnings)
@@ -115,7 +140,7 @@ def format_comparison(comparison: ComparisonResult) -> str:
         rows.append([
             r.press_name,
             _yes_no(r.viable),
-            r.recommended_configuration or "-",
+            _actual_configuration(r) or "-",
             f"{r.extrusion_ratio:.1f}",
             r.extrusion_ratio_status.upper(),
             f"{r.recommended_billet_length_mm}",
@@ -164,6 +189,7 @@ def format_annual_result(result: AnnualCalculationResult) -> str:
     if n.supplement_10_pct:
         lines.insert(3, f"Adjusted demand:          {n.adjusted_source_value:g} {result.demand.unit}/year")
         lines.append("Demand supplement:        10% included")
+    lines.extend(_selection_lines(c))
     if c.warnings:
         lines.append("Warnings:")
         lines.extend(f"  - {warning}" for warning in c.warnings)
@@ -215,6 +241,7 @@ def format_planning_result(result) -> str:
                 f"Extra for next billet:    {r.additional_time_for_next_billet_min:.2f} min"
             )
     lines.append("Complete billets only:    YES")
+    lines.extend(_selection_lines(r))
     if r.warnings:
         lines.append("Warnings:")
         lines.extend(f"  - {warning}" for warning in r.warnings)
@@ -290,7 +317,7 @@ def format_process_comparison(comparison) -> str:
             result.press_name,
             _yes_no(result.supported),
             _yes_no(result.viable),
-            result.recommended_configuration or "-",
+            _actual_configuration(result) or "-",
             f"{result.extrusion_ratio:.1f}",
             f"{result.exit_speed_m_min:.2f}",
             f"{result.recommended_billet_length_mm}",
@@ -316,7 +343,7 @@ def format_planning_comparison(comparison) -> str:
             result.press_name,
             _yes_no(result.process_viable),
             _yes_no(result.request_fulfilled),
-            result.recommended_configuration or "-",
+            _actual_configuration(result) or "-",
             str(result.planned_billets),
             str(result.planned_pulls),
             str(result.planned_bars),

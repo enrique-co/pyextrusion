@@ -6,6 +6,7 @@ from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 from .errors import InvalidPressConfigurationError, InvalidProfileInputError, InvalidProductionInputError
 from ._strict import require_bool, require_int, require_number
 from ._trim import validate_trim_inputs
+from ._selection import validate_selection
 from .models import (
     BilletResult,
     CalculationResult,
@@ -55,6 +56,8 @@ class _ResolvedProcess:
     configurations: tuple[ConfigurationResult, ...]
     valid_configurations: tuple[ConfigurationResult, ...]
     selected: ConfigurationResult | None
+    automatic_recommendation: ConfigurationResult | None
+    requested_configuration_result: ConfigurationResult | None
     required_profiles_per_billet: int | None
     supported: bool
     unsupported_reason: str | None
@@ -77,6 +80,19 @@ class _ResolvedProcess:
     geometric_index: float
     extrusion_time_per_billet_min: float
     recommended_billet_length_mm: int
+
+
+def _selection_fields(data: ProcessInput | StudyInput, resolved: _ResolvedProcess, *, details: bool = False) -> dict:
+    values = {
+        "requested_configuration": data.configuration,
+        "requested_billets_per_pull": data.billets_per_pull,
+        "selected_configuration": resolved.selected.name if resolved.selected else None,
+        "configuration_source": "user_override" if data.configuration is not None else "automatic",
+    }
+    if details:
+        values.update(automatic_recommendation=resolved.automatic_recommendation,
+                      requested_configuration_result=resolved.requested_configuration_result)
+    return values
 
 
 def section_from_linear_weight(
@@ -187,6 +203,7 @@ def _validate_process(data: ProcessInput | StudyInput) -> None:
         require_number(data.butt_mm, "process.butt_mm", InvalidProductionInputError, minimum=0.0)
     if data.cuts is not None:
         require_int(data.cuts, "process.cuts", InvalidProductionInputError, minimum=1)
+    validate_selection(data.configuration, data.billets_per_pull, prefix="process")
 
     if not 100.0 <= p.billet_min_length_mm <= 3000.0 or not 100.0 <= p.billet_max_length_mm <= 3000.0 or p.billet_max_length_mm < p.billet_min_length_mm:
         raise InvalidPressConfigurationError("press billet lengths must be within 100-3000 mm and min <= max")
@@ -425,7 +442,10 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
             "Use trim_total_per_billet_m for an explicit incoming-billet total."
         )
 
-    def _one_profile_cfg(front_scrap_m: float, source: str, *, require_multi: bool = False) -> ConfigurationResult:
+    def _one_profile_cfg(
+        front_scrap_m: float, source: str, *, require_multi: bool = False,
+        forced_billets_per_pull: int | None = None,
+    ) -> ConfigurationResult:
         def build(n: int) -> ConfigurationResult:
             base_segment_m = n * cut_m + front_scrap_m if n >= 1 else 0.0
             per_billet_nonshared_m = (
@@ -442,6 +462,14 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
                 if allocation_per_billet_m > 0 and available_for_billets_m >= 0
                 else 0
             )
+            if forced_billets_per_pull is not None:
+                k = forced_billets_per_pull
+                try:
+                    numeric_length = float(k) * allocation_per_billet_m + shared_pull_kerf_m
+                except OverflowError as exc:
+                    raise InvalidProductionInputError("process.billets_per_pull is outside the supported finite numeric range") from exc
+                if not math.isfinite(numeric_length):
+                    raise InvalidProductionInputError("process.billets_per_pull is outside the supported finite numeric range")
             full_pull_m = (
                 # Preserve the single-pull arithmetic order from 0.18.0.
                 k * per_billet_nonshared_m + (puller_kerf_m + final_kerf_m)
@@ -616,6 +644,24 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
     selected: ConfigurationResult | None = None
     if valid:
         selected = max(valid, key=lambda c: (c.billet_length_mm, -c.profiles_per_billet))
+    automatic_recommendation = selected
+    requested_configuration_result = None
+    if data.configuration is not None:
+        if data.configuration == "1_billet_2_profiles":
+            requested_configuration_result = cfg_double
+        elif data.configuration == "1_billet_1_profile":
+            requested_configuration_result = _one_profile_cfg(standard_trim, standard_source, forced_billets_per_pull=1)
+        else:
+            requested_configuration_result = _one_profile_cfg(
+                multi_scrap,
+                "user_override" if data.multi_billet_front_scrap_m is not None else standard_source,
+                require_multi=True, forced_billets_per_pull=data.billets_per_pull,
+            )
+        if requested_configuration_result not in configurations:
+            configurations = (*configurations, requested_configuration_result)
+            valid = tuple(cfg for cfg in configurations if cfg.valid)
+        # An inadmissible explicit choice must never fall back to a different family.
+        selected = requested_configuration_result if requested_configuration_result.valid else None
 
     def _required_unsupported_profiles() -> int | None:
         n_values = [int(data.cuts)] if fixed_by_user else list(range(1, theoretical_cuts + 1))
@@ -668,7 +714,7 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
                     best = min_profiles
         return best
 
-    required_profiles = None if selected is not None else _required_unsupported_profiles()
+    required_profiles = None if selected is not None or data.configuration is not None else _required_unsupported_profiles()
     supported = required_profiles is None
     unsupported_reason = None
     if not supported:
@@ -679,7 +725,12 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         warnings.append(unsupported_reason)
 
     viable = selected is not None and supported
-    if not viable and supported:
+    if data.configuration is not None:
+        if selected is None:
+            warnings.append("The requested production family is not physically viable; no alternative was selected.")
+        else:
+            warnings.append("The explicitly requested production family is used instead of automatic selection.")
+    elif not viable and supported:
         warnings.append("No supported configuration is viable for this press and process.")
     elif selected is not None and selected.name != "1_billet_1_profile":
         if selected.name == "k_billets_1_profile":
@@ -689,7 +740,10 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         else:
             warnings.append("Recommended special configuration: 1_billet_2_profiles.")
 
-    if fixed_by_user:
+    if fixed_by_user and data.configuration is not None:
+        if not viable:
+            warnings.insert(0, "User-defined cuts are not viable for the requested production family.")
+    elif fixed_by_user:
         if any("table length" in reason or "fits the table" in reason for reason in cfg_one.reasons):
             warnings.insert(0, "User-defined cuts exceed the physical table allowance after saw kerfs.")
         if any("above maximum" in reason for reason in cfg_one.reasons) and any(
@@ -699,7 +753,10 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         if not viable and not any("User-defined" in warning for warning in warnings):
             warnings.insert(0, "User-defined cuts do not produce a viable supported configuration.")
 
-    selected_cuts = selected.cuts if selected else max((c.cuts for c in configurations), default=0)
+    selected_cuts = selected.cuts if selected else (
+        requested_configuration_result.cuts if requested_configuration_result is not None
+        else max((c.cuts for c in configurations), default=0)
+    )
     profiles_per_billet = selected.profiles_per_billet if selected else 0
     billets_per_pull = selected.billets_per_pull if selected else 0
     cuts_per_pull = selected.cuts_per_pull if selected else 0
@@ -756,6 +813,8 @@ def _resolve_process(data: ProcessInput | StudyInput) -> _ResolvedProcess:
         configurations=configurations,
         valid_configurations=valid,
         selected=selected,
+        automatic_recommendation=automatic_recommendation,
+        requested_configuration_result=requested_configuration_result,
         required_profiles_per_billet=required_profiles,
         supported=supported,
         unsupported_reason=unsupported_reason,
@@ -791,8 +850,8 @@ def calculate_process(data: ProcessInput) -> ProcessResult:
         unsupported_reason=r.unsupported_reason,
         required_profiles_per_billet=r.required_profiles_per_billet,
         press_name=r.press.name,
-        recommended_configuration=selected.name if selected else None,
-        valid_configurations=tuple(cfg.name for cfg in r.valid_configurations),
+        recommended_configuration=r.automatic_recommendation.name if r.automatic_recommendation else None,
+        valid_configurations=tuple(dict.fromkeys(cfg.name for cfg in r.valid_configurations)),
         configurations=r.configurations,
         profile_section_per_exit_m2=r.area_one,
         profile_section_total_m2=r.area_total,
@@ -840,6 +899,7 @@ def calculate_process(data: ProcessInput) -> ProcessResult:
         extrusion_time_per_billet_min=r.extrusion_time_per_billet_min,
         dead_time_sec=r.press.dead_time_sec,
         warnings=r.warnings,
+        **_selection_fields(data, r, details=True),
     )
     _assert_finite_result(result)
     return result
@@ -1040,7 +1100,8 @@ def calculate(data: StudyInput) -> CalculationResult:
         supported=supported,
         unsupported_reason=unsupported_reason,
         required_profiles_per_billet=required_profiles,
-        recommended_configuration=selected.name if selected else None,
+        recommended_configuration=r.automatic_recommendation.name if r.automatic_recommendation else None,
+        **_selection_fields(data, r),
     )
 
     geometry_block = GeometryResult(
@@ -1156,6 +1217,7 @@ def calculate(data: StudyInput) -> CalculationResult:
         supplement_10_pct=data.supplement_10_pct,
         supplement_factor=supplement_factor,
         target_productivity_source=target_source,
+        **_selection_fields(data, r),
         trim_total_per_billet_m=(selected.trim_total_per_billet_m if selected
                                 else data.trim_total_per_billet_m or 0.0),
         trim_per_pull_m=selected.trim_per_pull_m if selected else 0.0,
@@ -1170,7 +1232,7 @@ def calculate(data: StudyInput) -> CalculationResult:
         unsupported_reason=unsupported_reason,
         required_profiles_per_billet=required_profiles,
         press_name=p.name,
-        recommended_configuration=selected.name if selected else None,
+        recommended_configuration=r.automatic_recommendation.name if r.automatic_recommendation else None,
         valid_configurations=valid_names,
         configurations=configurations,
         profile_section_per_exit_m2=area_one,
@@ -1238,6 +1300,7 @@ def calculate(data: StudyInput) -> CalculationResult:
         timing=timing_block,
         process=process_block,
         warnings=tuple(warnings),
+        **_selection_fields(data, r, details=True),
     )
     _assert_finite_result(result)
     return result
